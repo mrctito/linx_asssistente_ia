@@ -4,9 +4,9 @@ import PyPDF2
 from io import BytesIO
 import json
 from langchain.agents import AgentType
+from langchain_community.llms import OpenAI
 from langchain.agents import initialize_agent
 from langchain.agents.agent_toolkits.jira.toolkit import JiraToolkit
-from langchain_community.llms import OpenAI
 from langchain.schema import Document
 from langchain.text_splitter import (CharacterTextSplitter,
                                     RecursiveCharacterTextSplitter)
