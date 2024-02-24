@@ -13,6 +13,7 @@ from langchain.text_splitter import (CharacterTextSplitter,
 from atlassian import Confluence
 from langchain_openai import OpenAIEmbeddings
 from langchain.schema import Document
+from langchain.vectorstores import QdrantVectorStore
 from langchain.document_transformers.openai_functions import create_metadata_tagger
 from langchain_community.vectorstores import Qdrant
 from langchain_community.document_loaders import WebBaseLoader
@@ -21,6 +22,12 @@ from langchain_community.document_loaders import UnstructuredPDFLoader
 from langchain.document_loaders.unstructured import UnstructuredFileLoader
 from langchain.document_loaders.sitemap import SitemapLoader
 from qdrant_client import QdrantClient, models
+
+
+"""
+client = QdrantClient(os.getenv('QDRANT_URL'), api_key=os.getenv('QDRANT_API'))
+vector_store = QdrantVectorStore(client=client, collection_name="openpilot-data"
+"""
 
 
 def save_vectorstore_qdrant(chunks: list):
