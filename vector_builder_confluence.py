@@ -11,6 +11,16 @@ from langchain.schema import Document
 from langchain.text_splitter import (CharacterTextSplitter,
                                     RecursiveCharacterTextSplitter)
 from atlassian import Confluence
+from langchain_openai import OpenAIEmbeddings
+from langchain.schema import Document
+from langchain.document_transformers.openai_functions import create_metadata_tagger
+from langchain_community.vectorstores import Qdrant
+from langchain_community.document_loaders import WebBaseLoader
+from langchain_community.document_loaders import JSONLoader
+from langchain_community.document_loaders import UnstructuredPDFLoader
+from langchain.document_loaders.unstructured import UnstructuredFileLoader
+from langchain.document_loaders.sitemap import SitemapLoader
+from qdrant_client import QdrantClient, models
 
 
 def save_vectorstore_qdrant(chunks: list):
@@ -18,20 +28,20 @@ def save_vectorstore_qdrant(chunks: list):
         print(f"Salvando base de conhecimento no banco vetorial:"+os.getev("NOME_BASE_VETORIAL"))
         print(f'Número total de pacotes a serem gravados: {len(chunks)}')
 
-        embeddings = OpenAIEmbeddings(openai_api_key=base_conhecimento.openai_api_key)
+        embeddings = OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY"))
 
         qdrant_client = QdrantClient(
-            base_conhecimento.qadrant_url, 
+            os.getenv("QDRANT_URL"), 
             prefer_grpc=True,
             timeout=30.0,
-            api_key=base_conhecimento.qadrant_api_key
+            api_key=os.getenv("QDRANT_API_KEY")
         )
 
-        nome_col = get_collection_name(base_conhecimento)
-        logger.log(f'Apagando vetor: {nome_col}')        
+        nome_col = os.getenv("NOME_BASE_VETORIAL")
+        print(f'Apagando vetor: {nome_col}')        
         qdrant_client.delete_collection(collection_name=nome_col)
         
-        logger.log(f'Recriando vetor: {nome_col}')        
+        print(f'Recriando vetor: {nome_col}')        
         qdrant_client.recreate_collection(
             collection_name=nome_col,
             vectors_config=models.VectorParams(size=1536, distance=models.Distance.COSINE),
@@ -41,7 +51,7 @@ def save_vectorstore_qdrant(chunks: list):
 
         qdrant_doc_store = Qdrant(
             client=qdrant_client, 
-            collection_name=get_collection_name(base_conhecimento), 
+            collection_name=nome_col, 
             embeddings=embeddings,
         )
 
@@ -65,14 +75,14 @@ def save_vectorstore_qdrant(chunks: list):
                         raise Exception("Abortando após 5 tentativas.")
 
         #liga indexação
-        logger.log(f'Finalizando atualização do vetor')        
+        print(f'Finalizando atualização do vetor')        
         qdrant_client.update_collection(
-            collection_name=get_collection_name(base_conhecimento),
+            collection_name=nome_col,
             optimizer_config=models.OptimizersConfigDiff(indexing_threshold=20000)
         )
 
-        logger.log(f"Base de conhecimento foi gravada no banco vetorial.")
-        logger.log(f'Número total de pacotes que foram gravados: {ultimo_chunk}')
+        print(f"Base de conhecimento foi gravada no banco vetorial.")
+        print(f'Número total de pacotes que foram gravados: {ultimo_chunk}')
     except Exception as e:
         raise Exception(f"Erro ao salvar base de conhecimento no banco vetorial:\n"+str(e)+"\n")    
 
@@ -180,8 +190,8 @@ def cria_banco_confluence():
     chunks_array = []
     id_paginas_raiz = os.getenv("ID_PAGINAS_RAIZ")
     documents, total_palavras, total_paginas = processa_paginas_raiz(id_paginas_raiz)
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=750, 
-                                                chunk_overlap=75,
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=os.getenv("CHUNK_SIZE"), 
+                                                chunk_overlap=os.getenv("CHUNK_OVERLAP"),
                                                 separators= ["\n\n", "\n", ".", ";", ",", " ", ""],
                                                 length_function=len)
     
