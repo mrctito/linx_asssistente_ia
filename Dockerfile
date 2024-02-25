@@ -67,7 +67,8 @@ RUN pip install --no-cache-dir -v \
     urllib3==2.2.1 \
     tiktoken==0.6.0 \
     requests==2.31.0 \
-    PyPDF2==3.0.1
+    PyPDF2==3.0.1 \
+    chainlit==1.0.301
 
 WORKDIR /app
 COPY . /app
