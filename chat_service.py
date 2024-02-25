@@ -118,7 +118,6 @@ def GetConversationChain() -> ConversationalRetrievalChain:
     prompt = GetPrompt()
 
     chain = ConversationalRetrievalChain.from_llm(llm, 
-                                                  temperature=0, 
                                                   chain_type="stuff",
                                                   retriever=retriever,
                                                   memory=memory,
@@ -132,4 +131,4 @@ def chat(query):
     chain = GetConversationChain()
     response = chain.invoke({"question": query})
     print(response)
-    return response
+    return response["answer"]

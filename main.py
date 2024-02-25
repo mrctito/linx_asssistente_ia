@@ -20,15 +20,15 @@ def test():
       pergunta = input("O que você quer saber? ")
       if pergunta == ".":
         break
-      result = chat(pergunta)
-      print(result)
+      resposta = chat(pergunta)
+      print("\nResposta:\n\n"+resposta)
 
 
 if __name__ == "__main__":
 
   criar_base = os.getenv("CRIAR_BASE_VETORIAL", "N")
   if criar_base == "S":
-    confirma = input("Confirma criação da base vetorual? (S/N): ")
+    confirma = input("Confirma criação da base vetorial? (S/N): ")
     if confirma == "S":
       cria_banco_confluence()
     else:
