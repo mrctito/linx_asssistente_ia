@@ -1,0 +1,6 @@
+= Referencia uma página no Share.Link
+2. Premissas
+Ter o módulo Nodis/Imendes configurado3. Funcionalidade
+Para incluir um novo almoxarifado, basta clicar no botão "Incluir" e informar um "Número" para o mesmo, e uma "Descrição", ou seja o nome do almoxarifado.
+O almoxarifado poderá ser do "Tipo", “Área de Venda” ou “Depósito”, sendo que os produtos armazenados em almoxarifados do tipo “Depósito” poderão sofrer operações do tipo: compra, transferência e contagem. Já os 
+produtos armazenados em almoxarifados do tipo “Área de venda”, poderão sofrer, também, operações de venda.

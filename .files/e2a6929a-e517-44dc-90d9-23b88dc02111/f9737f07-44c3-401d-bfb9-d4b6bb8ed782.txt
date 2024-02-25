@@ -1,0 +1,3 @@
+informar o CNPJ, serão habilitados os campos "UF" e "Inscrição Estadual", caso seja informado um CNPJ que já exista no cadastro, somente será permitida sua inclusão se a IE informada para incluir for diferente da já 
+existente no cadastro.Informe todos os campos obrigatórios e os desejados. O campo “Data Cadastro” é preenchido automaticamente pelo sistema com a data em que está sendo realizada a inclusão.
+Na aba "Endereço" deverão ser informados os dados relacionados ao endereço da transportadora, sendo que os campos: "Endereço", "Bairro", "UF", "Cidade" e "CEP", são de preenchimento obrigatório.
