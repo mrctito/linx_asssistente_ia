@@ -29,12 +29,11 @@ client = QdrantClient(os.getenv('QDRANT_URL'), api_key=os.getenv('QDRANT_API'))
 vector_store = Qdrant(client=client, collection_name="openpilot-data", embedding_function)
 """
 
-def save_vectorstore(chunks: list):
-        print(f"Salvando base de conhecimento no banco vetorial:"+os.getenv("NOME_BASE_VETORIAL"))
-        print(f'Número total de pacotes a serem gravados: {len(chunks)}')
+def save_vectorstore_qdrant_incremental(chunks: list):
+        nome_col = os.getenv("NOME_BASE_VETORIAL")+"-V2"
 
-        nome_col = os.getenv("NOME_BASE_VETORIAL")
-        print(f'Apagando vetor: {nome_col}')        
+        print(f"Salvando base de conhecimento no banco vetorial: {nome_col}")
+        print(f'Número total de pacotes a serem gravados: {len(chunks)}')
 
         embeddings = OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -45,9 +44,12 @@ def save_vectorstore(chunks: list):
             api_key=os.getenv("QDRANT_API_KEY")
         )
 
+        print(f'Preparando para atualizar: {nome_col}')        
         vectorstore = Qdrant(client=qdrant_client, collection_name=nome_col, embeddings=embeddings)
         record_manager = SQLRecordManager(f"qdrant/{nome_col}", db_url="sqlite:///record_manager_cache.sql")
         record_manager.create_schema()
+        
+        print(f'Atualizando vetor: {nome_col}')        
         indexing_stats = index(
             chunks,
             record_manager,
@@ -56,13 +58,15 @@ def save_vectorstore(chunks: list):
             source_id_key="source",
         )
 
+        print("indexing_stats:", indexing_stats)
+
 
 def save_vectorstore_qdrant(chunks: list):
     try:
-        print(f"Salvando base de conhecimento no banco vetorial:"+os.getenv("NOME_BASE_VETORIAL"))
-        print(f'Número total de pacotes a serem gravados: {len(chunks)}')
-
         nome_col = os.getenv("NOME_BASE_VETORIAL")
+
+        print(f"Salvando base de conhecimento no banco vetorial:"+nome_col)
+        print(f'Número total de pacotes a serem gravados: {len(chunks)}')
         print(f'Apagando vetor: {nome_col}')        
 
         embeddings = OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY"))
@@ -110,13 +114,13 @@ def save_vectorstore_qdrant(chunks: list):
                         raise Exception("Abortando após 5 tentativas.")
 
         #liga indexação
-        print(f'Finalizando atualização do vetor')        
+        print(f'Finalizando atualização do vetor: {nome_col}')
         qdrant_client.update_collection(
             collection_name=nome_col,
             optimizer_config=models.OptimizersConfigDiff(indexing_threshold=20000)
         )
 
-        print(f"Base de conhecimento foi gravada no banco vetorial.")
+        print(f"Base de conhecimento foi gravada no banco vetorial: {nome_col}")
         print(f'Número total de pacotes que foram gravados: {ultimo_chunk}')
     except Exception as e:
         raise Exception(f"Erro ao salvar base de conhecimento no banco vetorial:\n"+str(e)+"\n")    
@@ -239,7 +243,7 @@ def cria_banco_confluence():
     chunks = text_splitter.split_documents(documents)
     if chunks is not None:
         save_vectorstore_qdrant(chunks)
-        save_vectorstore(chunks)
+        save_vectorstore_qdrant_incremental(chunks)
         print(f"Foram processados {len(chunks)} chunks.")
     else:
         print("Nenhum chunk foi processado.")
