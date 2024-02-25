@@ -196,15 +196,15 @@ async def GetConversationChain() -> ConversationalRetrievalChain:
                              verbose=(os.getenv("DEBUG", "S") == "S")
                             )
 
-    chain = ConversationalRetrievalChain.from_llm(retriever=retriever, 
-                                                  memory=memory,
-                                                  rephrase_question=False,
-                                                  return_generated_question=False,
-                                                  return_source_documents=True,
-                                                  combine_docs_chain=doc_chain,
-                                                  question_generator=question_generator_chain,
-                                                  verbose=(os.getenv("DEBUG", "S") == "S")
-                                                )
+    chain = ConversationalRetrievalChain(retriever=retriever, 
+                                        memory=memory,
+                                        rephrase_question=False,
+                                        return_generated_question=False,
+                                        return_source_documents=True,
+                                        combine_docs_chain=doc_chain,
+                                        question_generator=question_generator_chain,
+                                        verbose=(os.getenv("DEBUG", "S") == "S")
+                                        )
     
     return chain
 
