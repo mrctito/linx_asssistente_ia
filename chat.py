@@ -10,9 +10,36 @@ from langchain_community.vectorstores.qdrant import Qdrant
 from langchain.vectorstores.base import VectorStoreRetriever
 from langchain_openai import OpenAIEmbeddings
 from openai import Embedding
+from langchain.memory import (ConversationBufferWindowMemory, SQLChatMessageHistory)
+from langchain.schema.chat_history import BaseChatMessageHistory
+from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.prompts import PromptTemplate
+from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
 
 
-async def GetRetriever(embeddings: Embedding) -> VectorStoreRetriever:
+
+def GetPrompt():
+    system_template = """
+    Here's what I know:
+
+    Context: {context}
+    Conversation so far: {chat_history}
+    Your question: {question}
+    """
+
+    prompt = ChatPromptTemplate.from_messages(
+        messages=[
+            SystemMessagePromptTemplate(
+                prompt=PromptTemplate(input_variables=["context", "chat_history", "question"],
+                                        template=system_template)),
+            HumanMessagePromptTemplate.from_template("{question}")
+        ]
+    )
+
+    return prompt
+
+
+def GetRetriever() -> VectorStoreRetriever:
     try:
         collection_name = os.getenv("NOME_BASE_VETORIAL")
         vectorstore = None
@@ -53,22 +80,56 @@ async def GetRetriever(embeddings: Embedding) -> VectorStoreRetriever:
         raise Exception("Erro GetRetriever: "+str(e))
 
 
+def GetMemoty() -> BaseChatMessageHistory:
+    llm = ChatOpenAI(temperature=0, 
+                     model=os.getenv("MODEL_NAME"),
+                     openai_api_key=os.getenv("OPENAI_API_KEY"),
+                     streaming=False)
 
-def chat():
-    message_history = ChatMessageHistory()
-
-    memory = ConversationBufferMemory(
+    connection = os.getenv("DB_CACHE_URL")
+    table_name = "linx_seller_chat_history"
+    cache_id = os.getenv("EMAIL_USUARIO")
+    chat_history = SQLChatMessageHistory(session_id=cache_id, connection_string=connection, table_name=table_name)
+    memory_conversation = ConversationBufferWindowMemory(llm=llm, 
+                                            max_token_limit=1000,
+                                            output_key='answer',
+                                            memory_key="chat_history",
+                                            chat_memory=chat_history,
+                                            return_messages=True)
+    """
         memory_key="chat_history",
         output_key="answer",
         chat_memory=message_history,
         return_messages=True,
-    )
+    """
 
-    chain = ConversationalRetrievalChain.from_llm(
-        ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0, streaming=True),
-        chain_type="stuff",
-        retriever=docsearch.as_retriever(),
-        memory=memory,
-        return_source_documents=True,
-    )
+    return memory_conversation
 
+
+def GetConversationChain() -> ConversationalRetrievalChain:
+    memory = GetMemoty()
+    retriever = GetRetriever()
+
+    llm = ChatOpenAI(temperature=0, 
+                     model=os.getenv("MODEL_NAME"),
+                     openai_api_key=os.getenv("OPENAI_API_KEY"),
+                     streaming=False)
+
+    prompt = GetPrompt()
+
+    chain = ConversationalRetrievalChain.from_llm(llm, 
+                                                  temperature=0, 
+                                                  chain_type="stuff",
+                                                  retriever=retriever,
+                                                  memory=memory,
+                                                  return_source_documents=True,
+                                                  combine_docs_chain_kwargs={"prompt": prompt})
+    
+    return chain
+
+
+def chat(query):
+    chain = GetConversationChain()
+    response = chain.invoke({"question": query})
+    print(response)
+    return response
