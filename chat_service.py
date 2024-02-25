@@ -115,35 +115,32 @@ async def GetRetriever() -> VectorStoreRetriever:
         collection_name = os.getenv("NOME_BASE_VETORIAL_ATIVA")
         vectorstore = None
         retriever = None
-        try:
-            collection_name = collection_name
-            embeddings = OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY"))
 
-            qdrant_client = QdrantClient(os.getenv("QDRANT_URL"), 
-                                         api_key=os.getenv("QDRANT_API_KEY"), 
-                                         prefer_grpc=True)
-            
-            vectorStore = Qdrant(client=qdrant_client,
+        embeddings = OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY"))
+
+        qdrant_client = QdrantClient(os.getenv("QDRANT_URL"), 
+                                        api_key=os.getenv("QDRANT_API_KEY"), 
+                                        prefer_grpc=True
+                                        )
+        
+        vectorStore = Qdrant(client=qdrant_client,
                             collection_name=collection_name,
-                            embeddings=embeddings)
-            
-            SEARCH_K = int(os.getenv("SEARCH_K"))
-            SEARCH_MIN_SCORE = float(os.getenv("SEARCH_MIN_SCORE"))
-            retriever = vectorStore.as_retriever(search_type="similarity", 
-                                        search_kwargs={"k":SEARCH_K, "score_threshold": SEARCH_MIN_SCORE})
-            
-            """
-            retriever = ScoreThresholdRetriever.fromVectorStore(
-                vectorStore,
-                minSimilarityScore=0.9,  # Finds results with at least this similarity score
-                maxK=100,  # The maximum K value to use. Use it based to your chunk size to make sure you don't run out of tokens
-                kIncrement=2  # How much to increase K by each time. It'll fetch N results, then N + kIncrement, then N + kIncrement * 2, etc.
-            )
-            """
-
-            print(f"Qdrant Collection:{collection_name}")
-        except Exception as e:
-            raise Exception("Erro ao criar retriever QDRANT: "+str(e))
+                            embeddings=embeddings
+                            )
+        
+        SEARCH_K = int(os.getenv("SEARCH_K"))
+        SEARCH_MIN_SCORE = float(os.getenv("SEARCH_MIN_SCORE"))
+        retriever = vectorStore.as_retriever(search_type="similarity", 
+                                    search_kwargs={"k":SEARCH_K, "score_threshold": SEARCH_MIN_SCORE})
+        
+        """
+        retriever = ScoreThresholdRetriever.fromVectorStore(
+            vectorStore,
+            minSimilarityScore=0.9,  # Finds results with at least this similarity score
+            maxK=100,  # The maximum K value to use. Use it based to your chunk size to make sure you don't run out of tokens
+            kIncrement=2  # How much to increase K by each time. It'll fetch N results, then N + kIncrement, then N + kIncrement * 2, etc.
+        )
+        """
 
         return retriever
     except Exception as e:
@@ -157,10 +154,12 @@ async def GetMemory() -> BaseChatMessageHistory:
     connection = os.getenv("DB_CACHE_URL")
     table_name = "linx_seller_chat_history"
     cache_id = os.getenv("EMAIL_USUARIO")
+    
     chat_history = SQLChatMessageHistory(session_id=cache_id, 
                                          connection_string=connection, 
                                          table_name=table_name
                                          )
+    
     memory_conversation = ConversationBufferWindowMemory(llm=llm, 
                                             max_token_limit=1000,
                                             output_key='answer',
@@ -198,8 +197,8 @@ async def GetConversationChain() -> ConversationalRetrievalChain:
 
     chain = ConversationalRetrievalChain(retriever=retriever, 
                                         memory=memory,
-                                        rephrase_question=False,
-                                        return_generated_question=False,
+                                        rephrase_question=True,
+                                        return_generated_question=True,
                                         return_source_documents=True,
                                         combine_docs_chain=doc_chain,
                                         question_generator=question_generator_chain,
