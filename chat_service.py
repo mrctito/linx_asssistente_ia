@@ -102,11 +102,11 @@ async def GetPrompts() -> Tuple[ChatPromptTemplate, PromptTemplate]:
         raise Exception("Erro ao criar prompts: "+str(e))
 
 
-async def GetChatModel() -> ChatOpenAI:
+async def GetChatModel(streaming: bool=False) -> ChatOpenAI:
     llm = ChatOpenAI(temperature=0, 
                     model=os.getenv("MODEL_NAME"),
                     openai_api_key=os.getenv("OPENAI_API_KEY"),
-                    streaming=False,
+                    streaming=streaming,
                     verbose=(os.getenv("VERBOSE", "S") == "S")
                     )
     return llm
