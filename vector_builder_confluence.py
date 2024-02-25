@@ -30,7 +30,7 @@ vector_store = Qdrant(client=client, collection_name="openpilot-data", embedding
 """
 
 def save_vectorstore(chunks: list):
-        print(f"Salvando base de conhecimento no banco vetorial:"+os.getev("NOME_BASE_VETORIAL"))
+        print(f"Salvando base de conhecimento no banco vetorial:"+os.getenv("NOME_BASE_VETORIAL"))
         print(f'Número total de pacotes a serem gravados: {len(chunks)}')
 
         nome_col = os.getenv("NOME_BASE_VETORIAL")
