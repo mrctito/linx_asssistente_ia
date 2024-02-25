@@ -46,7 +46,10 @@ async def save_vectorstore_qdrant_incremental(chunks: list):
         )
 
         print(f'Preparando para atualizar: {nome_col}')        
-        vectorstore = Qdrant(client=qdrant_client, collection_name=nome_col, embeddings=embeddings)
+        vectorstore = Qdrant(client=qdrant_client,
+                             collection_name=nome_col,
+                             embeddings=embeddings)
+        
         record_manager = SQLRecordManager(f"qdrant/{nome_col}", db_url="sqlite:///record_manager_cache.sql")
         record_manager.create_schema()
         
@@ -61,8 +64,7 @@ async def save_vectorstore_qdrant_incremental(chunks: list):
 
         print("indexing_stats:", indexing_stats)
     except Exception as e:
-        print(f"Erro ao salvar base de conhecimento no banco vetorial (V2):\n"+str(e)+"\n")    
-        raise Exception(f"Erro ao salvar base de conhecimento no banco vetorial (V2):\n"+str(e)+"\n")    
+        print(f"ERRO ao salvar base de conhecimento no banco vetorial (V2):\n"+str(e)+"\n")    
 
 
 async def save_vectorstore_qdrant(chunks: list):
@@ -127,8 +129,7 @@ async def save_vectorstore_qdrant(chunks: list):
         print(f"Base de conhecimento foi gravada no banco vetorial: {nome_col}")
         print(f'Número total de pacotes que foram gravados: {ultimo_chunk}')
     except Exception as e:
-        print(f"Erro ao salvar base de conhecimento no banco vetorial:\n"+str(e)+"\n")    
-        raise Exception(f"Erro ao salvar base de conhecimento no banco vetorial:\n"+str(e)+"\n")    
+        print(f"ERRO ao salvar base de conhecimento no banco vetorial:\n"+str(e)+"\n")    
 
 
 async def get_page_content(confluence, space, page_id, page_title, page_url) -> Document:
