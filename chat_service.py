@@ -154,7 +154,7 @@ async def GetMemory() -> BaseChatMessageHistory:
     connection = os.getenv("DB_CACHE_URL")
     table_name = "linx_seller_chat_history"
     cache_id = os.getenv("EMAIL_USUARIO")
-    
+
     chat_history = SQLChatMessageHistory(session_id=cache_id, 
                                          connection_string=connection, 
                                          table_name=table_name
@@ -189,18 +189,18 @@ async def GetConversationChain() -> ConversationalRetrievalChain:
                                         )
 
     llm = await GetChatModel()
-    doc_chain = load_qa_chain(llm=llm,
-                             chain_type="stuff",
-                             prompt=chat_prompt,
-                             verbose=(os.getenv("DEBUG", "S") == "S")
-                            )
+    combine_docs_chain = load_qa_chain(llm=llm,
+                                     chain_type="stuff",
+                                     prompt=chat_prompt,
+                                     verbose=(os.getenv("DEBUG", "S") == "S")
+                                    )
 
     chain = ConversationalRetrievalChain(retriever=retriever, 
                                         memory=memory,
                                         rephrase_question=True,
                                         return_generated_question=True,
                                         return_source_documents=True,
-                                        combine_docs_chain=doc_chain,
+                                        combine_docs_chain=combine_docs_chain,
                                         question_generator=question_generator_chain,
                                         verbose=(os.getenv("DEBUG", "S") == "S")
                                         )

@@ -34,6 +34,7 @@ async def main():
     else:
       print("Criação da Base vetorial foi cancelada.")
   else:
+    print("Inicializando o serviço de chat...")
     await test()
 
 
