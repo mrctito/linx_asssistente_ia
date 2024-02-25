@@ -50,7 +50,7 @@ async def save_vectorstore_qdrant_incremental(chunks: list):
                              collection_name=nome_col,
                              embeddings=embeddings)
         
-        record_manager = SQLRecordManager(f"qdrant/{nome_col}", db_url="sqlite:///record_manager_cache.sql")
+        record_manager = SQLRecordManager(f"qdrant/{nome_col}", db_url="sqlite:///record_manager_cache.db")
         record_manager.create_schema()
         
         print(f'Atualizando vetor: {nome_col}')        
@@ -63,6 +63,7 @@ async def save_vectorstore_qdrant_incremental(chunks: list):
         )
 
         print("indexing_stats:", indexing_stats)
+        print(f"Base de conhecimento foi gravada no banco vetorial (V2): {nome_col}")
     except Exception as e:
         print(f"ERRO ao salvar base de conhecimento no banco vetorial (V2):\n"+str(e)+"\n")    
 
