@@ -1,17 +1,13 @@
 import os
 from typing import List
-
-from langchain.chains import ConversationalRetrievalChain
-from langchain.chat_models import ChatOpenAI
-from langchain.docstore.document import Document
-
+from langchain_core.documents import Document
+from langchain.chains import LLMChain, ConversationalRetrievalChain
 import chainlit as cl
 from chat_service import GetConversationChain, monta_resposta_chat
 
 
 @cl.on_chat_start
 async def on_chat_start():
-
     msg = cl.Message(content=f"Processing ...", disable_feedback=True)
     await msg.send()
     chain = GetConversationChain()
@@ -23,7 +19,8 @@ async def main(message: cl.Message):
     chain = cl.user_session.get("chain")  # type: ConversationalRetrievalChain
     cb = cl.AsyncLangchainCallbackHandler()
 
-    res = await chain.acall(message.content, callbacks=[cb])
+    #res = await chain.ainvoke(message.content, callbacks=[cb])
+    res = await chain.ainvoke({"question": message.content}, callbacks=[cb])
     answer = res["answer"]
     source_documents = res["source_documents"]  # type: List[Document]
 
