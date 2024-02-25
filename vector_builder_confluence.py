@@ -30,6 +30,7 @@ vector_store = Qdrant(client=client, collection_name="openpilot-data", embedding
 """
 
 async def save_vectorstore_qdrant_incremental(chunks: list):
+    try:
         nome_col = os.getenv("NOME_BASE_VETORIAL_V2")
 
         print(f"Salvando base de conhecimento no banco vetorial: {nome_col}")
@@ -59,6 +60,9 @@ async def save_vectorstore_qdrant_incremental(chunks: list):
         )
 
         print("indexing_stats:", indexing_stats)
+    except Exception as e:
+        print(f"Erro ao salvar base de conhecimento no banco vetorial (V2):\n"+str(e)+"\n")    
+        raise Exception(f"Erro ao salvar base de conhecimento no banco vetorial (V2):\n"+str(e)+"\n")    
 
 
 async def save_vectorstore_qdrant(chunks: list):
@@ -123,6 +127,7 @@ async def save_vectorstore_qdrant(chunks: list):
         print(f"Base de conhecimento foi gravada no banco vetorial: {nome_col}")
         print(f'Número total de pacotes que foram gravados: {ultimo_chunk}')
     except Exception as e:
+        print(f"Erro ao salvar base de conhecimento no banco vetorial:\n"+str(e)+"\n")    
         raise Exception(f"Erro ao salvar base de conhecimento no banco vetorial:\n"+str(e)+"\n")    
 
 
