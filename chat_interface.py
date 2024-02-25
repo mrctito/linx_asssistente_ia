@@ -1,5 +1,6 @@
 import os
 from typing import List
+from chat_service import GetConversationChain
 
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -23,34 +24,7 @@ async def on_chat_start():
     msg = cl.Message(content=f"Processing ...", disable_feedback=True)
     await msg.send()
 
-
-    # Create a Chroma vector store
-    embeddings = OpenAIEmbeddings()
-    docsearch = await cl.make_async(Chroma.from_texts)(
-        texts, embeddings, metadatas=metadatas
-    )
-
-    message_history = ChatMessageHistory()
-
-    memory = ConversationBufferMemory(
-        memory_key="chat_history",
-        output_key="answer",
-        chat_memory=message_history,
-        return_messages=True,
-    )
-
-    # Create a chain that uses the Chroma vector store
-    chain = ConversationalRetrievalChain.from_llm(
-        ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0, streaming=True),
-        chain_type="stuff",
-        retriever=docsearch.as_retriever(),
-        memory=memory,
-        return_source_documents=True,
-    )
-
-    # Let the user know that the system is ready
-    msg.content = f"Processing `{file.name}` done. You can now ask questions!"
-    await msg.update()
+    chain = GetConversationChain()
 
     cl.user_session.set("chain", chain)
 
