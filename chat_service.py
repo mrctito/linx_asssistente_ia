@@ -68,7 +68,8 @@ Resposta:
 
 def get_base_prompt_template() -> str:
     base_prompt_template = """
-    Você é um assistente útil, atencioso e muito educado. Sua missão é responder as perguntas dos clientes da melhor forma possível.
+    Você é um assistente útil, atencioso e muito educado. Especialista no sistema Linx Seller Web. 
+    Sua missão é responder as perguntas dos clientes de forma didática, com informações precisas e relevantes.
     """
 
     #controla liberdade de acesso ao próprio conhecimeto do GPT
