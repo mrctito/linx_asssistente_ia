@@ -153,7 +153,7 @@ def get_page_content(confluence, space, page_id, page_title, page_url) -> Docume
 
 def processa_pagina_raiz(page_id: str) -> Tuple[List[Document], int]:
 
-    def processa_pagina(base_url, space, page_id, docs, processed_pages, nivel_atual, nivel_maximo):
+    def processa_pagina(base_url, space, page_id, docs, processed_pages, nivel_atual: int, nivel_maximo: int):
         try:
             if page_id in processed_pages:
                 print(f"Evitando processar página {page_id} para evitar loop.")
@@ -195,7 +195,7 @@ def processa_pagina_raiz(page_id: str) -> Tuple[List[Document], int]:
     space = confluence.get_page_space(page_id)
 
     processed_pages = set()
-    nivel_maximo = os.getenv("CONFLUENCE_NIVEL_RECURSIVIDADE")
+    nivel_maximo = int(os.getenv("CONFLUENCE_NIVEL_RECURSIVIDADE"))
     nivel_atual = 1
 
     # Processa a página raiz e suas filhas de forma recursiva
