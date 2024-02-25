@@ -171,7 +171,7 @@ def processa_pagina_raiz(page_id: str) -> Tuple[List[Document], int]:
             docs.append(doc)
             
             processed_pages.add(page_id)
-            print(f"Total parcial de páginas processadas até agora: {len(processed_pages)}", True)
+            print(f"Total parcial de páginas processadas até agora: {len(processed_pages)} - nível atual: {nivel_atual}")
 
             if nivel_atual >= nivel_maximo:
                 return
@@ -212,7 +212,8 @@ def processa_paginas_raiz(id_paginas_raiz: str) -> List[Document]:
     paginas_raiz = id_paginas_raiz.split(",")
     for pagina_id_raiz in paginas_raiz:
         print(f"Conteúdo da página: {pagina_id_raiz}")
-        docs, total_paginas = processa_pagina_raiz(pagina_id_raiz)
+        docs, paginas = processa_pagina_raiz(pagina_id_raiz)
+        total_paginas = total_paginas + paginas
         for doc in docs:
             documents.append(doc)
             palavras = doc.page_content.split()
