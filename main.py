@@ -21,7 +21,7 @@ async def test():
       pergunta = input("O que você quer saber? ")
       if pergunta == ".":
         break
-      resposta = chat(pergunta)
+      resposta = await chat(pergunta)
       print("\nResposta:\n\n"+resposta)
 
 
