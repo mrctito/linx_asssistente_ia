@@ -1,7 +1,7 @@
 import os
 import json
 from pydantic import BaseModel
-from typing import Tuple
+from typing import Tuple, List
 from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain, ConversationalRetrievalChain
@@ -17,6 +17,7 @@ from langchain.schema.chat_history import BaseChatMessageHistory
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import PromptTemplate
 from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
+from langchain_core.documents import Document
 
 
 condense_template='''
@@ -206,8 +207,17 @@ async def GetConversationChain() -> ConversationalRetrievalChain:
     return chain
 
 
+def concatena_sources(documents: List[Document]) -> str:
+    # Usa compreensão de lista para extrair o 'source' de cada document.metadata
+    sources = [doc.metadata['source'] for doc in documents if 'source' in doc.metadata]
+    # Concatena todos os sources com '\n' como separador
+    return "\n".join(sources)
+
+
 async def chat(query):
     chain = await GetConversationChain()
     response = await chain.ainvoke({"question": query})
     print(response)
-    return response["answer"]
+    all_sources = concatena_sources(response["source_documents"])
+    answer = response["answer"]
+    return answer + "\n\n" + all_sources
