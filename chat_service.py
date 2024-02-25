@@ -47,7 +47,7 @@ async def GetPrompt():
 
 async def GetRetriever() -> VectorStoreRetriever:
     try:
-        collection_name = os.getenv("NOME_BASE_VETORIAL")
+        collection_name = os.getenv("NOME_BASE_VETORIAL_ATIVA")
         vectorstore = None
         retriever = None
         try:
