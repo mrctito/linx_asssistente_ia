@@ -1,6 +1,7 @@
 import os
 import json
 from pydantic import BaseModel
+from typing import Tuple
 from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain, ConversationalRetrievalChain
@@ -10,6 +11,7 @@ from langchain_community.vectorstores.qdrant import Qdrant
 from langchain.vectorstores.base import VectorStoreRetriever
 from langchain_openai import OpenAIEmbeddings
 from openai import Embedding
+from langchain.chains.question_answering import load_qa_chain
 from langchain.memory import (ConversationBufferWindowMemory, SQLChatMessageHistory)
 from langchain.schema.chat_history import BaseChatMessageHistory
 from langchain_core.messages import HumanMessage, AIMessage
@@ -17,32 +19,95 @@ from langchain_core.prompts import PromptTemplate
 from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
 
 
+condense_template='''
+"""Given the following chat history and a follow up question, rephrase the follow up input question 
+to be a standalone question. Or end the conversation if it seems like it's done.
 
-async def GetPrompt():
-    system_template = """
+Conversation History:
+{chat_history}
+
+Follow Up Input:
+{question}
+
+Standalone question:"""
+'''
+
+prompt_template_restrito_ao_contexto = """
+\nPRESTE MUITA ATENÇÃO E SIGA TODAS ESSAS INSTRUÇÕES CUIDADOSAMENTE:
+1- Baseie suas respostas exclusivamente no conteúdo fornecido no CONTEXTO apresentado.
+2- Forneça respostas completas e com todos os detalhes e informações complementares que estiverem disponíveis no contexto.
+3- Não procure ou inclua informações além das fornecidas no contexto.
+4- Evite especulações; forneça respostas fundamentadas somente nas informações disponíveis.
+5- Nunca apresente informações inventadas ou fictícias.
+6- Responda sempre no idioma em que a pergunta foi feita. Caso o contexto esteja em um idioma diferente, busque esclarecer o significado mantendo a integridade da informação.
+7- Se não for possível fornecer uma resposta devido à falta de informações ou ambiguidade no contexto, responda com: "Desculpe, não tenho informações suficientes para responder a essa pergunta com precisão."
+
+Lembre-se de que em situações onde o contexto possa ser interpretado de várias maneiras, considere mencionar essa ambiguidade em sua resposta para manter a transparência.
+"""
+
+prompt_template_nao_restrito_ao_contexto = """
+\nSIGA ESTAS INSTRUÇÕES COM ATENÇÃO PARA FORMULAR SUA RESPOSTA:
+1- Baseie suas respostas no CONTEXTO fornecido, complementando com seu conhecimento quando apropriado.
+2- Use informações adicionais do seu conhecimento apenas quando estas enriquecerem a resposta e estiverem em harmonia com o contexto apresentado.
+3- Forneça respostas completas e com todos os detalhes e informações complementares que estiverem disponíveis.
+4- Seja claro sobre qual parte da resposta vem do contexto e qual parte é baseada em conhecimento externo.
+5- Evite especulações e não apresente informações fictícias.
+6- Responda no idioma em que a pergunta foi feita. Caso o contexto esteja em um idioma diferente, faça a tradução necessária mantendo a precisão da informação.
+7- Se, mesmo com a inclusão de seu conhecimento, a informação necessária não estiver disponível ou o contexto for ambíguo, responda com: "Desculpe, não tenho informações suficientes para responder a essa pergunta com total precisão."
+
+Lembre-se de utilizar seu conhecimento de forma responsável e apenas quando isso contribuir para a precisão e relevância da resposta. Sua transparência é essencial para manter a confiança na qualidade das informações fornecidas.
+"""
+
+human_prompt_template='''
+Pergunta:
+{question}
+
+Resposta:
+'''
+
+
+def get_base_prompt_template() -> str:
+    base_prompt_template = """
     Você é um assistente útil, atencioso e muito educado. Sua missão é responder as perguntas dos clientes da melhor forma possível.
-    Você deve utilizar as informações disponíveis no contexto e na conversa até o momento para responder as perguntas. 
-    Você não pode utilizar o seu conhecimento para responder as perguntas. 
-    Você não pode acessar a internet para responder as perguntas.
-    Você não pode inventar informações.
-    Você não pode inventar informações ficticias. 
-    Se você não conseguir responder às perguntas com base no contexto e na conversa, você deve apenas dizer que não consegue responcer.
-
-    Context: {context}
-    Conversation so far: {chat_history}
-    Your question: {question}
     """
 
-    prompt = ChatPromptTemplate.from_messages(
-        messages=[
-            SystemMessagePromptTemplate(
-                prompt=PromptTemplate(input_variables=["context", "chat_history", "question"],
-                                        template=system_template)),
-            HumanMessagePromptTemplate.from_template("{question}")
-        ]
-    )
+    #controla liberdade de acesso ao próprio conhecimeto do GPT
+    if os.getenv("RESTRITO_AO_CONTEXTO", "S") == "S":
+        base_prompt_template += prompt_template_restrito_ao_contexto
+    else:
+        base_prompt_template += prompt_template_nao_restrito_ao_contexto
+            
+    return base_prompt_template 
 
-    return prompt
+
+async def GetPrompts() -> Tuple[ChatPromptTemplate, PromptTemplate]:
+    try:
+        base_prompt_template = get_base_prompt_template()
+        template = base_prompt_template + "\n\nHISTÓRICO DA CONVERSA:{chat_history}.\nFIM DO HISTÓRICO DA CONVERSA.\n\nINFORMAÇÕES DE CONTEXTO:{context}.\nFIM DO CONTEXTO."
+        prompt_template = PromptTemplate(template=template, input_variables=["chat_history", "context"])
+        system_message_prompt = SystemMessagePromptTemplate(prompt=prompt_template)
+
+        template = human_prompt_template
+        prompt_template = PromptTemplate(template=template, input_variables=["question"])
+        user_message_prompt = HumanMessagePromptTemplate(prompt=prompt_template)
+
+        chat_prompt = ChatPromptTemplate.from_messages([system_message_prompt, user_message_prompt])
+        condense_prompt = PromptTemplate(template=condense_template, input_variables=["chat_history", "question"])
+
+        return chat_prompt, condense_prompt
+    except Exception as e:
+        print("Erro ao criar prompts: "+str(e))
+        raise Exception("Erro ao criar prompts: "+str(e))
+
+
+async def GetChatModel() -> ChatOpenAI:
+    llm = ChatOpenAI(temperature=0, 
+                    model=os.getenv("MODEL_NAME"),
+                    openai_api_key=os.getenv("OPENAI_API_KEY"),
+                    streaming=False,
+                    verbose=(os.getenv("DEBUG", "S") == "S")
+                    )
+    return llm
 
 
 async def GetRetriever() -> VectorStoreRetriever:
@@ -86,22 +151,23 @@ async def GetRetriever() -> VectorStoreRetriever:
         raise Exception("Erro GetRetriever: "+str(e))
 
 
-async def GetMemoty() -> BaseChatMessageHistory:
-    llm = ChatOpenAI(temperature=0, 
-                     model=os.getenv("MODEL_NAME"),
-                     openai_api_key=os.getenv("OPENAI_API_KEY"),
-                     streaming=False)
+async def GetMemory() -> BaseChatMessageHistory:
+    llm = await GetChatModel()
 
     connection = os.getenv("DB_CACHE_URL")
     table_name = "linx_seller_chat_history"
     cache_id = os.getenv("EMAIL_USUARIO")
-    chat_history = SQLChatMessageHistory(session_id=cache_id, connection_string=connection, table_name=table_name)
+    chat_history = SQLChatMessageHistory(session_id=cache_id, 
+                                         connection_string=connection, 
+                                         table_name=table_name
+                                         )
     memory_conversation = ConversationBufferWindowMemory(llm=llm, 
                                             max_token_limit=1000,
                                             output_key='answer',
                                             memory_key="chat_history",
                                             chat_memory=chat_history,
-                                            return_messages=True)
+                                            return_messages=True
+                                            )
     """
         memory_key="chat_history",
         output_key="answer",
@@ -113,22 +179,32 @@ async def GetMemoty() -> BaseChatMessageHistory:
 
 
 async def GetConversationChain() -> ConversationalRetrievalChain:
-    memory = await GetMemoty()
+    memory = await GetMemory()
     retriever = await GetRetriever()
+    chat_prompt, condense_prompt = await GetPrompts()
 
-    llm = ChatOpenAI(temperature=0, 
-                     model=os.getenv("MODEL_NAME"),
-                     openai_api_key=os.getenv("OPENAI_API_KEY"),
-                     streaming=False)
+    llm_question_generator = await GetChatModel()     
+    question_generator_chain = LLMChain(llm=llm_question_generator,
+                                        prompt=condense_prompt,
+                                        verbose=(os.getenv("DEBUG", "S") == "S")
+                                        )
 
-    prompt = await GetPrompt()
+    llm = await GetChatModel()
+    doc_chain = load_qa_chain(llm=llm,
+                             chain_type="stuff",
+                             prompt=chat_prompt,
+                             verbose=(os.getenv("DEBUG", "S") == "S")
+                            )
 
-    chain = ConversationalRetrievalChain.from_llm(llm, 
-                                                  chain_type="stuff",
-                                                  retriever=retriever,
+    chain = ConversationalRetrievalChain.from_llm(retriever=retriever, 
                                                   memory=memory,
+                                                  rephrase_question=False,
+                                                  return_generated_question=False,
                                                   return_source_documents=True,
-                                                  combine_docs_chain_kwargs={"prompt": prompt})
+                                                  combine_docs_chain=doc_chain,
+                                                  question_generator=question_generator_chain,
+                                                  verbose=(os.getenv("DEBUG", "S") == "S")
+                                                )
     
     return chain
 

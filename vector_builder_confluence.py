@@ -58,7 +58,7 @@ async def save_vectorstore_qdrant_incremental(chunks: list):
             chunks,
             record_manager,
             vectorstore,
-            cleanup="full",
+            cleanup="incremental",
             source_id_key="source",
         )
 
