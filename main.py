@@ -4,11 +4,12 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
+from langchain.chains import LLMChain, ConversationalRetrievalChain
 import uvicorn
 from llm import prepara_llm, prepara_llm_azure
 from prompt import prepara_prompt
 from vector_builder_confluence import cria_banco_confluence
+from langchain.memory import ChatMessageHistory, ConversationBufferMemory
 
 app = FastAPI()
 
@@ -46,6 +47,9 @@ def decompoe_acao(usuario_input: UsuarioInput) -> str:
   result = llm.invoke({"texto": usuario_input})
   return result["text"]
   
+
+
+
 if __name__ == "__main__":
 
   criar_base = os.getenv("CRIAR_BASE_VETORIAL", "N")
