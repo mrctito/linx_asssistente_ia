@@ -7,7 +7,8 @@ from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 import uvicorn
 from llm import prepara_llm, prepara_llm_azure
-from prompt import TABELA_COMANDOS_EMPORIO_STR, prepara_prompt
+from prompt import prepara_prompt
+from vector_builder_confluence import cria_banco_confluence
 
 app = FastAPI()
 
@@ -47,10 +48,13 @@ def decompoe_acao(usuario_input: UsuarioInput) -> str:
   
 if __name__ == "__main__":
 
-  modo_teste = os.getenv("MODO_TESTE", "N")
-  if modo_teste == "S":
-    # se modo teste ativo, então roda test()
-    test()
+  criar_base = os.getenv("CRIAR_BASE_VETORIAL", "N")
+  if criar_base == "S":
+    confirma = input("Confirma criação da base vetorual? (S/N): ")
+    if confirma == "S":
+      cria_banco_confluence()
+    else:
+      print("Criação da Base vetorial foi cancelada.")
   else:
     # senão coloca o serviço no ar
     print()
@@ -68,8 +72,3 @@ if __name__ == "__main__":
 
 
 
-"""
-1- No programa principal, criar um campo de texto para o usuário digitar o comando desejado.
-2- Chamar a API que traduz o comando do usuario em um código de menu.
-3- Escrever um "case" ou "ifs aninhados" para cada código de menu, que chama a função do sistema correspondente.
-"""

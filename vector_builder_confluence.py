@@ -13,27 +13,28 @@ from langchain.text_splitter import (CharacterTextSplitter,
 from atlassian import Confluence
 from langchain_openai import OpenAIEmbeddings
 from langchain.schema import Document
-from langchain.vectorstores import QdrantVectorStore
 from langchain.document_transformers.openai_functions import create_metadata_tagger
-from langchain_community.vectorstores import Qdrant
+from langchain_community.vectorstores.qdrant import Qdrant
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_community.document_loaders import JSONLoader
 from langchain_community.document_loaders import UnstructuredPDFLoader
 from langchain.document_loaders.unstructured import UnstructuredFileLoader
 from langchain.document_loaders.sitemap import SitemapLoader
 from qdrant_client import QdrantClient, models
+from langchain.indexes import SQLRecordManager, index
 
 
 """
 client = QdrantClient(os.getenv('QDRANT_URL'), api_key=os.getenv('QDRANT_API'))
-vector_store = QdrantVectorStore(client=client, collection_name="openpilot-data"
+vector_store = Qdrant(client=client, collection_name="openpilot-data", embedding_function)
 """
 
-
-def save_vectorstore_qdrant(chunks: list):
-    try:
+def save_vectorstore(chunks: list):
         print(f"Salvando base de conhecimento no banco vetorial:"+os.getev("NOME_BASE_VETORIAL"))
         print(f'Número total de pacotes a serem gravados: {len(chunks)}')
+
+        nome_col = os.getenv("NOME_BASE_VETORIAL")
+        print(f'Apagando vetor: {nome_col}')        
 
         embeddings = OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -44,8 +45,35 @@ def save_vectorstore_qdrant(chunks: list):
             api_key=os.getenv("QDRANT_API_KEY")
         )
 
+        vectorstore = Qdrant(client=qdrant_client, collection_name=nome_col, embeddings=embeddings)
+        record_manager = SQLRecordManager(f"qdrant/{nome_col}", db_url="sqlite:///record_manager_cache.sql")
+        record_manager.create_schema()
+        indexing_stats = index(
+            chunks,
+            record_manager,
+            vectorstore,
+            cleanup="full",
+            source_id_key="source",
+        )
+
+
+def save_vectorstore_qdrant(chunks: list):
+    try:
+        print(f"Salvando base de conhecimento no banco vetorial:"+os.getev("NOME_BASE_VETORIAL"))
+        print(f'Número total de pacotes a serem gravados: {len(chunks)}')
+
         nome_col = os.getenv("NOME_BASE_VETORIAL")
         print(f'Apagando vetor: {nome_col}')        
+
+        embeddings = OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY"))
+
+        qdrant_client = QdrantClient(
+            os.getenv("QDRANT_URL"), 
+            prefer_grpc=True,
+            timeout=30.0,
+            api_key=os.getenv("QDRANT_API_KEY")
+        )
+
         qdrant_client.delete_collection(collection_name=nome_col)
         
         print(f'Recriando vetor: {nome_col}')        
@@ -194,7 +222,6 @@ def processa_paginas_raiz(id_paginas_raiz: str) -> List[Document]:
 
 
 def cria_banco_confluence():
-    chunks_array = []
     id_paginas_raiz = os.getenv("ID_PAGINAS_RAIZ")
     documents, total_palavras, total_paginas = processa_paginas_raiz(id_paginas_raiz)
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=os.getenv("CHUNK_SIZE"), 
@@ -206,6 +233,7 @@ def cria_banco_confluence():
     chunks = text_splitter.split_documents(documents)
     if chunks is not None:
         save_vectorstore_qdrant(chunks)
+        save_vectorstore(chunks)
         print(f"Foram processados {len(chunks)} chunks.")
     else:
         print("Nenhum chunk foi processado.")
