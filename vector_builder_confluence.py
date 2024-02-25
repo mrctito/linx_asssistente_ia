@@ -102,7 +102,7 @@ def save_vectorstore_qdrant(chunks: list):
                     break
                 except Exception as e:
                     if retries == 0: 
-                        logger.log("Erro ao salvar chunk: "+str(e))
+                        print("Erro ao salvar chunk: "+str(e))
                     retries += 1
                     if retries <= 3:
                         continue
@@ -122,7 +122,7 @@ def save_vectorstore_qdrant(chunks: list):
         raise Exception(f"Erro ao salvar base de conhecimento no banco vetorial:\n"+str(e)+"\n")    
 
 
-def get_page_content(confluence, space, page_id, page_title, page_url, logger) -> Document:
+def get_page_content(confluence, space, page_id, page_title, page_url) -> Document:
     try:
         page_pdf = confluence.export_page(page_id)
         buffer = BytesIO(page_pdf)
@@ -147,7 +147,7 @@ def get_page_content(confluence, space, page_id, page_title, page_url, logger) -
         else:
             return Document(page_content="", metadata={})
     except Exception as e:
-        logger.log(f"Erro ao tentar obter conteúdo da página {page_id}.\nErro:{str(e)}\n")
+        print(f"Erro ao tentar obter conteúdo da página {page_id}.\nErro:{str(e)}\n")
         return Document(page_content="", metadata={})
 
 
