@@ -59,7 +59,7 @@ def save_vectorstore(chunks: list):
 
 def save_vectorstore_qdrant(chunks: list):
     try:
-        print(f"Salvando base de conhecimento no banco vetorial:"+os.getev("NOME_BASE_VETORIAL"))
+        print(f"Salvando base de conhecimento no banco vetorial:"+os.getenv("NOME_BASE_VETORIAL"))
         print(f'Número total de pacotes a serem gravados: {len(chunks)}')
 
         nome_col = os.getenv("NOME_BASE_VETORIAL")
