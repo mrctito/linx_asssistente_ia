@@ -68,7 +68,8 @@ RUN pip install --no-cache-dir -v \
     tiktoken==0.6.0 \
     requests==2.31.0 \
     PyPDF2==3.0.1 \
-    chainlit==1.0.301
+    chainlit==1.0.301 \ 
+    aioconsole==0.7.0
 
 WORKDIR /app
 COPY . /app

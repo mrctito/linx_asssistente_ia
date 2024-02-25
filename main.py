@@ -1,6 +1,7 @@
 import os
 import json
-from fastapi import FastAPI
+import asyncio
+import aioconsole
 from pydantic import BaseModel
 from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
@@ -14,7 +15,7 @@ from langchain.memory import ChatMessageHistory, ConversationBufferMemory
 
 
 # rotina para testar o serviço
-def test():
+async def test():
   while True:
       print("\n")
       pergunta = input("O que você quer saber? ")
@@ -24,14 +25,18 @@ def test():
       print("\nResposta:\n\n"+resposta)
 
 
-if __name__ == "__main__":
-
+async def main():
   criar_base = os.getenv("CRIAR_BASE_VETORIAL", "N")
   if criar_base == "S":
     confirma = input("Confirma criação da base vetorial? (S/N): ")
     if confirma == "S":
-      cria_banco_confluence()
+      await cria_banco_confluence()
     else:
       print("Criação da Base vetorial foi cancelada.")
   else:
-    test()
+    await test()
+
+
+if __name__ == "__main__":
+  asyncio.run(main())
+

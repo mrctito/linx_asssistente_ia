@@ -18,9 +18,13 @@ from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, H
 
 
 
-def GetPrompt():
+async def GetPrompt():
     system_template = """
-    Here's what I know:
+    Você é um assistente útil, atencioso e muito educado. Sua missão é responder as perguntas dos clientes da melhor forma possível.
+    Você deve utilizar as informações disponíveis no contexto e na conversa até o momento para responder as perguntas. 
+    Você não deve utilizar o conheciemento de fora do contexto e da conversa para responder as perguntas. 
+    Se você não conseguir responder às perguntas com base no contexto e na conversa, você deve apenas dizer que não consegue responcer.
+    Você NÃO pode inventar informações.
 
     Context: {context}
     Conversation so far: {chat_history}
@@ -39,7 +43,7 @@ def GetPrompt():
     return prompt
 
 
-def GetRetriever() -> VectorStoreRetriever:
+async def GetRetriever() -> VectorStoreRetriever:
     try:
         collection_name = os.getenv("NOME_BASE_VETORIAL")
         vectorstore = None
@@ -80,7 +84,7 @@ def GetRetriever() -> VectorStoreRetriever:
         raise Exception("Erro GetRetriever: "+str(e))
 
 
-def GetMemoty() -> BaseChatMessageHistory:
+async def GetMemoty() -> BaseChatMessageHistory:
     llm = ChatOpenAI(temperature=0, 
                      model=os.getenv("MODEL_NAME"),
                      openai_api_key=os.getenv("OPENAI_API_KEY"),
@@ -106,16 +110,16 @@ def GetMemoty() -> BaseChatMessageHistory:
     return memory_conversation
 
 
-def GetConversationChain() -> ConversationalRetrievalChain:
-    memory = GetMemoty()
-    retriever = GetRetriever()
+async def GetConversationChain() -> ConversationalRetrievalChain:
+    memory = await GetMemoty()
+    retriever = await GetRetriever()
 
     llm = ChatOpenAI(temperature=0, 
                      model=os.getenv("MODEL_NAME"),
                      openai_api_key=os.getenv("OPENAI_API_KEY"),
                      streaming=False)
 
-    prompt = GetPrompt()
+    prompt = await GetPrompt()
 
     chain = ConversationalRetrievalChain.from_llm(llm, 
                                                   chain_type="stuff",
@@ -127,8 +131,8 @@ def GetConversationChain() -> ConversationalRetrievalChain:
     return chain
 
 
-def chat(query):
-    chain = GetConversationChain()
-    response = chain.invoke({"question": query})
+async def chat(query):
+    chain = await GetConversationChain()
+    response = await chain.ainvoke({"question": query})
     print(response)
     return response["answer"]

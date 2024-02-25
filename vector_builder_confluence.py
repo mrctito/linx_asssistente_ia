@@ -29,8 +29,8 @@ client = QdrantClient(os.getenv('QDRANT_URL'), api_key=os.getenv('QDRANT_API'))
 vector_store = Qdrant(client=client, collection_name="openpilot-data", embedding_function)
 """
 
-def save_vectorstore_qdrant_incremental(chunks: list):
-        nome_col = os.getenv("NOME_BASE_VETORIAL")+"-V2"
+async def save_vectorstore_qdrant_incremental(chunks: list):
+        nome_col = os.getenv("NOME_BASE_VETORIAL_V2")
 
         print(f"Salvando base de conhecimento no banco vetorial: {nome_col}")
         print(f'Número total de pacotes a serem gravados: {len(chunks)}')
@@ -61,9 +61,9 @@ def save_vectorstore_qdrant_incremental(chunks: list):
         print("indexing_stats:", indexing_stats)
 
 
-def save_vectorstore_qdrant(chunks: list):
+async def save_vectorstore_qdrant(chunks: list):
     try:
-        nome_col = os.getenv("NOME_BASE_VETORIAL")
+        nome_col = os.getenv("NOME_BASE_VETORIAL_V1")
 
         print(f"Salvando base de conhecimento no banco vetorial:"+nome_col)
         print(f'Número total de pacotes a serem gravados: {len(chunks)}')
@@ -126,7 +126,7 @@ def save_vectorstore_qdrant(chunks: list):
         raise Exception(f"Erro ao salvar base de conhecimento no banco vetorial:\n"+str(e)+"\n")    
 
 
-def get_page_content(confluence, space, page_id, page_title, page_url) -> Document:
+async def get_page_content(confluence, space, page_id, page_title, page_url) -> Document:
     try:
         page_pdf = confluence.export_page(page_id)
         buffer = BytesIO(page_pdf)
@@ -155,9 +155,9 @@ def get_page_content(confluence, space, page_id, page_title, page_url) -> Docume
         return Document(page_content="", metadata={})
 
 
-def processa_pagina_raiz(page_id: str) -> Tuple[List[Document], int]:
+async def processa_pagina_raiz(page_id: str) -> Tuple[List[Document], int]:
 
-    def processa_pagina(base_url, space, page_id, docs, processed_pages, nivel_atual: int, nivel_maximo: int):
+    async def processa_pagina(base_url, space, page_id, docs, processed_pages, nivel_atual: int, nivel_maximo: int):
         try:
             if page_id in processed_pages:
                 print(f"Evitando processar página {page_id} para evitar loop.")
@@ -171,7 +171,7 @@ def processa_pagina_raiz(page_id: str) -> Tuple[List[Document], int]:
             page_url = f"{base_url}/{webui_link}"
 
             #page_url = f"{base_url}{page['_links']['webui']}" if '_links' in page and 'webui' in page['_links'] else 'URL não disponível'
-            doc = get_page_content(confluence, space, child_page_id, page_title, page_url)
+            doc = await get_page_content(confluence, space, child_page_id, page_title, page_url)
             docs.append(doc)
             
             processed_pages.add(page_id)
@@ -182,7 +182,7 @@ def processa_pagina_raiz(page_id: str) -> Tuple[List[Document], int]:
 
             all_child_pages = confluence.get_page_child_by_type(page_id, "page", limit=500, start=0)                
             for child_page in all_child_pages:
-                processa_pagina(base_url, space, child_page.get('id'), docs, processed_pages, nivel_atual + 1, nivel_maximo)
+                await processa_pagina(base_url, space, child_page.get('id'), docs, processed_pages, nivel_atual + 1, nivel_maximo)
         
         except Exception as e:
             print(f"Erro ao processar página {page_id}.\nErro:{str(e)}\n")
@@ -203,13 +203,13 @@ def processa_pagina_raiz(page_id: str) -> Tuple[List[Document], int]:
     nivel_atual = 1
 
     # Processa a página raiz e suas filhas de forma recursiva
-    processa_pagina(base_url, space, page_id, docs, processed_pages, nivel_atual, nivel_maximo)
+    await processa_pagina(base_url, space, page_id, docs, processed_pages, nivel_atual, nivel_maximo)
     print(f"Total de páginas processadas: {len(processed_pages)} para a página raiz {page_id}.")
 
     return docs, len(processed_pages)
 
 
-def processa_paginas_raiz(id_paginas_raiz: str) -> List[Document]:
+async def processa_paginas_raiz(id_paginas_raiz: str) -> List[Document]:
     documents = []
     total_palavras = 0  
     total_paginas = 0      
@@ -217,7 +217,7 @@ def processa_paginas_raiz(id_paginas_raiz: str) -> List[Document]:
     paginas_raiz = id_paginas_raiz.split(",")
     for pagina_id_raiz in paginas_raiz:
         print(f"Conteúdo da página: {pagina_id_raiz}")
-        docs, paginas = processa_pagina_raiz(pagina_id_raiz)
+        docs, paginas = await processa_pagina_raiz(pagina_id_raiz)
         total_paginas = total_paginas + paginas
         for doc in docs:
             documents.append(doc)
@@ -227,9 +227,9 @@ def processa_paginas_raiz(id_paginas_raiz: str) -> List[Document]:
     return documents, total_palavras, total_paginas
 
 
-def cria_banco_confluence():
+async def cria_banco_confluence():
     id_paginas_raiz = os.getenv("ID_PAGINAS_RAIZ")
-    documents, total_palavras, total_paginas = processa_paginas_raiz(id_paginas_raiz)
+    documents, total_palavras, total_paginas = await processa_paginas_raiz(id_paginas_raiz)
 
     chunk_size = int(os.getenv("CHUNK_SIZE", "valor_padrao_inteiro"))
     chunk_overlap = int(os.getenv("CHUNK_OVERLAP", "valor_padrao_inteiro"))
@@ -242,8 +242,8 @@ def cria_banco_confluence():
     print(f"Foram processadas {total_palavras} palavras em {total_paginas} páginas.")
     chunks = text_splitter.split_documents(documents)
     if chunks is not None:
-        save_vectorstore_qdrant(chunks)
-        save_vectorstore_qdrant_incremental(chunks)
+        await save_vectorstore_qdrant(chunks)
+        await save_vectorstore_qdrant_incremental(chunks)
         print(f"Foram processados {len(chunks)} chunks.")
     else:
         print("Nenhum chunk foi processado.")
