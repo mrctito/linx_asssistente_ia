@@ -107,7 +107,7 @@ async def GetChatModel() -> ChatOpenAI:
                     model=os.getenv("MODEL_NAME"),
                     openai_api_key=os.getenv("OPENAI_API_KEY"),
                     streaming=False,
-                    verbose=(os.getenv("DEBUG", "S") == "S")
+                    verbose=(os.getenv("VERBOSE", "S") == "S")
                     )
     return llm
 
@@ -184,14 +184,14 @@ async def GetConversationChain() -> ConversationalRetrievalChain:
     llm_question_generator = await GetChatModel()     
     question_generator_chain = LLMChain(llm=llm_question_generator,
                                         prompt=condense_prompt,
-                                        verbose=(os.getenv("DEBUG", "S") == "S")
+                                        verbose=(os.getenv("VERBOSE", "S") == "S")
                                         )
 
     llm = await GetChatModel()
     combine_docs_chain = load_qa_chain(llm=llm,
                                      chain_type="stuff",
                                      prompt=chat_prompt,
-                                     verbose=(os.getenv("DEBUG", "S") == "S")
+                                     verbose=(os.getenv("VERBOSE", "S") == "S")
                                     )
 
     chain = ConversationalRetrievalChain(retriever=retriever, 
@@ -201,7 +201,7 @@ async def GetConversationChain() -> ConversationalRetrievalChain:
                                         return_source_documents=True,
                                         combine_docs_chain=combine_docs_chain,
                                         question_generator=question_generator_chain,
-                                        verbose=(os.getenv("DEBUG", "S") == "S")
+                                        verbose=(os.getenv("VERBOSE", "S") == "S")
                                         )
     
     return chain
