@@ -4,9 +4,7 @@ from typing import List
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import Chroma
-from langchain.chains import (
-    ConversationalRetrievalChain,
-)
+from langchain.chains import ConversationalRetrievalChain
 from langchain.chat_models import ChatOpenAI
 
 from langchain.docstore.document import Document
@@ -21,30 +19,10 @@ text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=10
 
 @cl.on_chat_start
 async def on_chat_start():
-    files = None
 
-    # Wait for the user to upload a file
-    while files == None:
-        files = await cl.AskFileMessage(
-            content="Please upload a text file to begin!",
-            accept=["text/plain"],
-            max_size_mb=20,
-            timeout=180,
-        ).send()
-
-    file = files[0]
-
-    msg = cl.Message(content=f"Processing `{file.name}`...", disable_feedback=True)
+    msg = cl.Message(content=f"Processing ...", disable_feedback=True)
     await msg.send()
 
-    with open(file.path, "r", encoding="utf-8") as f:
-        text = f.read()
-
-    # Split the text into chunks
-    texts = text_splitter.split_text(text)
-
-    # Create a metadata for each chunk
-    metadatas = [{"source": f"{i}-pl"} for i in range(len(texts))]
 
     # Create a Chroma vector store
     embeddings = OpenAIEmbeddings()
