@@ -214,10 +214,14 @@ def concatena_sources(documents: List[Document]) -> str:
     return "\n".join(sources)
 
 
-async def chat(query):
-    chain = await GetConversationChain()
-    response = await chain.ainvoke({"question": query})
-    print(response)
+def monta_resposta_chat(response) -> str:
     all_sources = concatena_sources(response["source_documents"])
     answer = response["answer"]
     return answer + "\n\n" + all_sources
+
+
+async def chat(query):
+    chain = await GetConversationChain()
+    response = await chain.ainvoke({"question": query})
+    result = monta_resposta_chat(response)
+    return result

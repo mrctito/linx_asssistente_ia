@@ -1,21 +1,12 @@
 import os
 from typing import List
-from chat_service import GetConversationChain
 
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import Chroma
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chat_models import ChatOpenAI
-
 from langchain.docstore.document import Document
-from langchain.memory import ChatMessageHistory, ConversationBufferMemory
 
 import chainlit as cl
-
-os.environ["OPENAI_API_KEY"] = "OPENAI_API_KEY"
-
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+from chat_service import GetConversationChain, monta_resposta_chat
 
 
 @cl.on_chat_start
@@ -23,9 +14,7 @@ async def on_chat_start():
 
     msg = cl.Message(content=f"Processing ...", disable_feedback=True)
     await msg.send()
-
     chain = GetConversationChain()
-
     cl.user_session.set("chain", chain)
 
 
@@ -37,6 +26,8 @@ async def main(message: cl.Message):
     res = await chain.acall(message.content, callbacks=[cb])
     answer = res["answer"]
     source_documents = res["source_documents"]  # type: List[Document]
+
+    resposta = monta_resposta_chat(res)
 
     text_elements = []  # type: List[cl.Text]
 
