@@ -113,9 +113,6 @@ async def GetChatModel() -> ChatOpenAI:
 async def GetRetriever() -> VectorStoreRetriever:
     try:
         collection_name = os.getenv("NOME_BASE_VETORIAL_ATIVA")
-        vectorstore = None
-        retriever = None
-
         embeddings = OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY"))
 
         qdrant_client = QdrantClient(os.getenv("QDRANT_URL"), 
@@ -197,8 +194,8 @@ async def GetConversationChain() -> ConversationalRetrievalChain:
 
     chain = ConversationalRetrievalChain(retriever=retriever, 
                                         memory=memory,
-                                        rephrase_question=True,
-                                        return_generated_question=True,
+                                        rephrase_question=False,
+                                        return_generated_question=False,
                                         return_source_documents=True,
                                         combine_docs_chain=combine_docs_chain,
                                         question_generator=question_generator_chain,
