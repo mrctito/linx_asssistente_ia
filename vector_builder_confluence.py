@@ -207,7 +207,8 @@ def processa_pagina_raiz(page_id: str) -> Tuple[List[Document], int]:
 
 def processa_paginas_raiz(id_paginas_raiz: str) -> List[Document]:
     documents = []
-    total_palavras = 0        
+    total_palavras = 0  
+    total_paginas = 0      
 
     paginas_raiz = id_paginas_raiz.split(",")
     for pagina_id_raiz in paginas_raiz:
@@ -225,8 +226,12 @@ def processa_paginas_raiz(id_paginas_raiz: str) -> List[Document]:
 def cria_banco_confluence():
     id_paginas_raiz = os.getenv("ID_PAGINAS_RAIZ")
     documents, total_palavras, total_paginas = processa_paginas_raiz(id_paginas_raiz)
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=os.getenv("CHUNK_SIZE"), 
-                                                chunk_overlap=os.getenv("CHUNK_OVERLAP"),
+
+    chunk_size = int(os.getenv("CHUNK_SIZE", "valor_padrao_inteiro"))
+    chunk_overlap = int(os.getenv("CHUNK_OVERLAP", "valor_padrao_inteiro"))
+
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size,
+                                                chunk_overlap=chunk_overlap,
                                                 separators= ["\n\n", "\n", ".", ";", ",", " ", ""],
                                                 length_function=len)
     
