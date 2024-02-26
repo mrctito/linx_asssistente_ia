@@ -20,7 +20,7 @@ async def on_chat_start():
 @cl.on_message
 async def main(message: cl.Message):
     chain = cl.user_session.get("chain")
-    cb = cl.AsyncLangchainCallbackHandler()
+    cb = cl.LangchainCallbackHandler() #AsyncLangchainCallbackHandler()
     res = await chain.ainvoke({"question": message.content}, callbacks=[cb])
     reposta = monta_resposta_chat(res)
     await cl.Message(content=reposta).send()
