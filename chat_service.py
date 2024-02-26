@@ -21,7 +21,7 @@ from langchain_core.documents import Document
 from langchain.schema import StrOutputParser
 from langchain.schema.runnable import Runnable
 from langchain.schema.runnable.config import RunnableConfig
-from langchain.schema.runnable import RunnablePassthrough
+from langchain.schema.runnable import RunnablePassthrough, RunnableParallel
 
 
 condense_template='''
@@ -221,10 +221,9 @@ async def GetConversationChainRunnable() -> Runnable:
     """
     prompt = ChatPromptTemplate.from_template(template)
 
-    # LLM
-    model = await GetChatModel()
+    model = await GetChatModel(True)
+    retriever = await GetRetriever()
 
-    # RAG pipeline
     chain = (
         {"context": retriever, "question": RunnablePassthrough()}
         | prompt
