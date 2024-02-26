@@ -222,7 +222,7 @@ async def GetConversationChainRunnable() -> Runnable:
     prompt = ChatPromptTemplate.from_template(template)
 
     # LLM
-    model = ChatOpenAI(temperature=0.0, openai_api_key="api_key")
+    model = await GetChatModel()
 
     # RAG pipeline
     chain = (
