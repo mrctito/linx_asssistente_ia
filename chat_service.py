@@ -18,6 +18,10 @@ from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import PromptTemplate
 from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
 from langchain_core.documents import Document
+from langchain.schema import StrOutputParser
+from langchain.schema.runnable import Runnable
+from langchain.schema.runnable.config import RunnableConfig
+from langchain.schema.runnable import RunnablePassthrough
 
 
 condense_template='''
@@ -204,6 +208,30 @@ async def GetConversationChain() -> ConversationalRetrievalChain:
                                         verbose=(os.getenv("VERBOSE", "S") == "S")
                                         )
     
+    return chain
+
+
+async def GetConversationChainRunnable() -> Runnable:
+
+    # Prompt template
+    template = """Answer the question based only on the following context, 
+    which can include text and tables::
+    {context}
+    Question: {question}
+    """
+    prompt = ChatPromptTemplate.from_template(template)
+
+    # LLM
+    model = ChatOpenAI(temperature=0.0, openai_api_key="api_key")
+
+    # RAG pipeline
+    chain = (
+        {"context": retriever, "question": RunnablePassthrough()}
+        | prompt
+        | model
+        | StrOutputParser()
+    )
+
     return chain
 
 
