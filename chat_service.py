@@ -211,7 +211,7 @@ async def GetConversationChain() -> ConversationalRetrievalChain:
     return chain
 
 
-async def GetConversationChainRunnable() -> Runnable:
+async def GetConversationChainRunnable():
 
     # Prompt template
     template = """Answer the question based only on the following context, 

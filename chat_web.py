@@ -11,10 +11,10 @@ from chat_service import GetConversationChain, GetConversationChainRunnable, mon
 
 @cl.on_chat_start
 async def on_chat_start():
-    chain = await GetConversationChain()
-    cl.user_session.set("chain", chain)
+    #chain = await GetConversationChain()
+    #cl.user_session.set("chain", chain)
 
-    runnable = GetConversationChainRunnable()
+    runnable = await GetConversationChainRunnable()
     cl.user_session.set("runnable", runnable)
 
     msg = cl.Message(content=f"Olá, o que você deseja saber?", disable_feedback=True)
@@ -22,7 +22,7 @@ async def on_chat_start():
 
 
 @cl.on_message
-async def main(message: cl.Message):
+async def on_message(message: cl.Message):
 
     '''
     chain = cl.user_session.get("chain")  # type: ConversationalRetrievalChain
@@ -31,12 +31,13 @@ async def main(message: cl.Message):
     reposta = monta_resposta_chat(res)
     await cl.Message(content=reposta).send()
     '''
-    
+
     runnable = cl.user_session.get("runnable")  # type: Runnable
     msg = cl.Message(content="")
     async for chunk in runnable.astream(
         {"question": message.content},
-        config=RunnableConfig(callbacks=[cl.LangchainCallbackHandler()])):
+        config=RunnableConfig(callbacks=[cl.LangchainCallbackHandler()])
+    ):
         await msg.stream_token(chunk)
 
-    await msg.send()    
+    await msg.send()
