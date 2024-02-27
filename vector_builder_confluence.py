@@ -23,6 +23,8 @@ from langchain.document_loaders.sitemap import SitemapLoader
 from qdrant_client import QdrantClient, models
 from langchain.indexes import SQLRecordManager, index
 
+from lib_utils import carregar_arquivo_para_dicionario
+
 
 async def get_page_content(confluence, space, page_id, page_title, page_url) -> Document:
     try:
@@ -107,36 +109,40 @@ async def processa_pagina_raiz(page_id: str) -> Tuple[List[Document], int]:
     return docs, len(processed_pages)
 
 
-async def processa_paginas_raiz(id_paginas_raiz: str) -> List[Document]:
+async def processa_paginas_raiz(dados: dict) -> List[Document]:
     documents = []
     total_palavras = 0  
     total_paginas = 0      
 
-    paginas_raiz = id_paginas_raiz.split(",")
-    for pagina_id_raiz in paginas_raiz:
-        print(f"Conteúdo da página: {pagina_id_raiz}")
-        docs, paginas = await processa_pagina_raiz(pagina_id_raiz)
-        total_paginas = total_paginas + paginas
-        for doc in docs:
-            documents.append(doc)
-            palavras = doc.page_content.split()
-            total_palavras = total_palavras + len(palavras)
-        
-    return documents, total_palavras, total_paginas
+    pages_id = dados.get('page_id')
+    if pages_id is not None:    
+        print("Processando pages_id")
+        for pagina_id_raiz in pages_id:
+            print(f"Processando página: {pagina_id_raiz}")
+            docs, paginas = await processa_pagina_raiz(pagina_id_raiz)
+            total_paginas = total_paginas + paginas
+            for doc in docs:
+                documents.append(doc)
+                palavras = doc.page_content.split()
+                total_palavras = total_palavras + len(palavras)
+    
+    print(f"Processadas: {total_paginas} páginas - total {total_palavras} palavras")
+    return documents
 
 
 async def processa_dados_confluence():
-    id_paginas_raiz = os.getenv("ID_PAGINAS_RAIZ")
-    documents, total_palavras, total_paginas = await processa_paginas_raiz(id_paginas_raiz)
+    chunk_size = int(os.getenv("CHUNK_SIZE"))
+    chunk_overlap = int(os.getenv("CHUNK_OVERLAP"))
 
-    chunk_size = int(os.getenv("CHUNK_SIZE", "valor_padrao_inteiro"))
-    chunk_overlap = int(os.getenv("CHUNK_OVERLAP", "valor_padrao_inteiro"))
+    caminho_arquivo = "info_confluence.txt"
+    dados = carregar_arquivo_para_dicionario(caminho_arquivo)
+    documents = await processa_paginas_raiz(dados)
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size,
                                                 chunk_overlap=chunk_overlap,
                                                 separators= ["\n\n", "\n", ".", ";", ",", " ", ""],
                                                 length_function=len)
     
-    print(f"Foram processadas {total_palavras} palavras em {total_paginas} páginas.")
     chunks = text_splitter.split_documents(documents)
+    print(f"Confluence: total {len(chunks)} chunks")
     return chunks

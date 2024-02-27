@@ -25,6 +25,8 @@ from langchain.indexes import SQLRecordManager, index
 from youtube_transcript_api import YouTubeTranscriptApi
 from googleapiclient.discovery import build
 
+from lib_utils import carregar_arquivo_para_dicionario
+
 
 def get_playlist_videos(playlist_id, api_key):
 
@@ -146,36 +148,22 @@ def processa_videos(dados: dict) -> List[Document]:
             print(video_id, "ERRO", f"Video youtube NÃO processado - Erro:{str(e)}")
 
     print(f"Processadas: {videos_total} videos - total {palavras_total} palavras")
-    return documents, videos_total, palavras_total
-
-
-def carregar_arquivo_para_dicionario(caminho_arquivo):
-    dados = {}
-    chave_atual = None
-    with open(caminho_arquivo, 'r') as arquivo:
-        for linha in arquivo:
-            linha = linha.strip()  # Remove espaços em branco e quebras de linha
-            if linha.startswith('[') and linha.endswith(']'):
-                chave_atual = linha[1:-1]  # Remove os colchetes para usar como chave
-                dados[chave_atual] = []  # Inicia uma nova lista para essa chave
-            elif chave_atual:
-                dados[chave_atual].append(linha)  # Adiciona a linha à lista da chave atual
-    return dados
+    return documents
 
 
 async def processa_dados_youtube():
-    chunk_size = int(os.getenv("CHUNK_SIZE", "valor_padrao_inteiro"))
-    chunk_overlap = int(os.getenv("CHUNK_OVERLAP", "valor_padrao_inteiro"))
+    chunk_size = int(os.getenv("CHUNK_SIZE"))
+    chunk_overlap = int(os.getenv("CHUNK_OVERLAP"))
 
     caminho_arquivo = "info_youtube.txt"
     dados = carregar_arquivo_para_dicionario(caminho_arquivo)
-    documents, videos_total, palavras_total = processa_videos(dados)
+    documents = processa_videos(dados)
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size,
                                                 chunk_overlap=chunk_overlap,
                                                 separators= ["\n\n", "\n", ".", ";", ",", " ", ""],
                                                 length_function=len)
     
-    print(f"Foram processadas {palavras_total} palavras em {videos_total} videos.")
     chunks = text_splitter.split_documents(documents)
+    print(f"Youtube: total {len(chunks)} chunks")
     return chunks
