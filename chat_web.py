@@ -41,11 +41,23 @@ async def on_message(message: cl.Message):
     msg = cl.Message(content=result["answer"], disable_feedback=True)
     await msg.send()
 
-    return 
+    #return 
+
+    answer_prefix_tokens=["FINAL", "answer"]
+    cl.LangchainCallbackHandler(
+        stream_final_answer=True,
+        answer_prefix_tokens=answer_prefix_tokens,
+    )
+
     msg = cl.Message(content="")
     async for chunk in runnable.astream(
         {"question": message.content},
-        config=RunnableConfig(callbacks=[cl.LangchainCallbackHandler()]),
+        config=RunnableConfig(callbacks=[cl.LangchainCallbackHandler(stream_final_answer=True,
+                                                                     force_stream_final_answer=True,
+                                                                     answer_prefix_tokens=answer_prefix_tokens
+                                                                     )
+                                        ]
+                            ),
     ):
         await msg.stream_token(chunk)
 
