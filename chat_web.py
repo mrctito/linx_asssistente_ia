@@ -11,8 +11,10 @@ from chat_service import GetConversationChain, GetConversationChainRunnable, mon
 
 @cl.on_chat_start
 async def on_chat_start():
-    #chain = await GetConversationChain()
-    #cl.user_session.set("chain", chain)
+    '''
+    chain = await GetConversationChain()
+    cl.user_session.set("chain", chain)
+    '''
 
     runnable = await GetConversationChainRunnable()
     cl.user_session.set("runnable", runnable)
