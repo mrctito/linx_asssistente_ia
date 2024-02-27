@@ -138,7 +138,6 @@ def processa_videos(dados: dict) -> List[Document]:
                 documents.append(doc)
                 palavras = doc.page_content.split()
                 palavras_total = palavras_total + len(palavras)
-                total_bytes += len(doc.page_content)
                 videos_total += 1
                 print(video_id, "OK", f"Video youtube processado - total {len(palavras)} palavras.")
             else:
@@ -147,7 +146,7 @@ def processa_videos(dados: dict) -> List[Document]:
             print(video_id, "ERRO", f"Video youtube NÃO processado - Erro:{str(e)}")
 
     print(f"Processadas: {videos_total} videos - total {palavras_total} palavras")
-    return documents, videos_total, palavras_total, total_bytes
+    return documents, videos_total, palavras_total
 
 
 def carregar_arquivo_para_dicionario(caminho_arquivo):
@@ -165,37 +164,18 @@ def carregar_arquivo_para_dicionario(caminho_arquivo):
 
 
 async def processa_dados_youtube():
-    caminho_arquivo = "info_youtube.txt"
-    dados = carregar_arquivo_para_dicionario(caminho_arquivo)
-
-    documents, videos_total, palavras_total, total_bytes = processa_videos(dados)
-
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=arquivo.base_conhecimento.chunk_size, 
-                                                chunk_overlap=arquivo.base_conhecimento.chunk_overlap,
-                                                separators= ["\n\n", "\n", ".", ";", ",", " ", ""],
-                                                length_function=len)
-    
-    try:
-        arquivo.total_palavras = palavras_total
-        arquivo.total_bytes = total_bytes
-        arquivo.total_videos = videos_total
-        chunks = text_splitter.split_documents(documents)
-        if chunks is not None:
-            chunks_array.append(chunks)
-    except Exception as e:
-        logger.log(f"Erro ao dividir documento {arquivo.nome_arquivo}:\n"+str(e)+"\n")
-
-
-
-
     chunk_size = int(os.getenv("CHUNK_SIZE", "valor_padrao_inteiro"))
     chunk_overlap = int(os.getenv("CHUNK_OVERLAP", "valor_padrao_inteiro"))
+
+    caminho_arquivo = "info_youtube.txt"
+    dados = carregar_arquivo_para_dicionario(caminho_arquivo)
+    documents, videos_total, palavras_total = processa_videos(dados)
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size,
                                                 chunk_overlap=chunk_overlap,
                                                 separators= ["\n\n", "\n", ".", ";", ",", " ", ""],
                                                 length_function=len)
     
-    print(f"Foram processadas {total_palavras} palavras em {total_paginas} páginas.")
+    print(f"Foram processadas {palavras_total} palavras em {videos_total} videos.")
     chunks = text_splitter.split_documents(documents)
     return chunks
