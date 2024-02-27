@@ -100,37 +100,38 @@ def load_youtube_docs(video_id):
     return None
 
 
-def processa_videos(binary_data: bytes) -> List[Document]:
+def processa_videos(dados: dict) -> List[Document]:
+    google_api_key = os.getenv("GOOGLE_API_KEY")
     documents = []
-    google_api_key = base_conhecimento.google_api_key
+    lista_videos = set()
     palavras_total = 0        
     total_bytes = 0
     videos_total = 0
-    arquivo = binary_data.decode('utf-8')
-    data = parse_builder_params(arquivo)
-    lista_videos = set()
-    
-    if 'channel' in data and isinstance(data['channel'], list):
-        for item, params in data['channel']:
-            channel_videos = get_channel_videos(item, google_api_key)
+
+    channels = dados.get('channel')
+    if channels is not None:    
+        print("Processando channels")
+        for channel in channels:
+            channel_videos = get_channel_videos(channel, google_api_key)
             for video_id in channel_videos:
                 lista_videos.add(video_id) 
 
-    if 'playlist' in data and isinstance(data['playlist'], list):
-        for item, params in data['playlist']:
-            channel_videos = get_playlist_videos(item, google_api_key)
+    playlist = dados.get('playlist')
+    if playlist is not None:    
+        print("Processando playlists")
+        for channel in playlist:
+            channel_videos = get_playlist_videos(channel, google_api_key)
             for video_id in channel_videos:
                 lista_videos.add(video_id) 
 
-    if 'url' in data and isinstance(data['url'], list):
-        for item, params in data['url']:
-            video_id = extract_video_code(item)
+    video_urls = dados.get('url')
+    if video_urls is not None:
+        print("Processando video urls")
+        for url in video_urls:
+            video_id = extract_video_code(url)
             lista_videos.add(video_id)
 
-    logger.log(f"Iniciando processamento dos videos: {len(lista_videos)} videos.")
-
     for video_id in lista_videos:
-        logger.open_log_item("YOUTUBE", video_id)
         try:
             doc = load_youtube_docs(video_id)
             if doc:
@@ -139,23 +140,35 @@ def processa_videos(binary_data: bytes) -> List[Document]:
                 palavras_total = palavras_total + len(palavras)
                 total_bytes += len(doc.page_content)
                 videos_total += 1
-                logger.log_item(video_id, "OK", f"Video youtube processado - total {len(palavras)} palavras.", doc.page_content)
+                print(video_id, "OK", f"Video youtube processado - total {len(palavras)} palavras.")
             else:
-                logger.log_item(video_id, "ERRO", f"Video youtube NÃO processado - sem conteúdo.")
+                print(video_id, "ERRO", f"Video youtube NÃO processado - sem conteúdo.")
         except Exception as e:
-            logger.log_item(video_id, "ERRO", f"Video youtube NÃO processado - Erro:{str(e)}")
-        finally:
-            logger.close_log_item()
+            print(video_id, "ERRO", f"Video youtube NÃO processado - Erro:{str(e)}")
 
-    logger.log(f"Processadas: {videos_total} videos - total {palavras_total} palavras")
-
+    print(f"Processadas: {videos_total} videos - total {palavras_total} palavras")
     return documents, videos_total, palavras_total, total_bytes
 
 
-async def processa_dados_youtube():
-    carregar dados youtube
+def carregar_arquivo_para_dicionario(caminho_arquivo):
+    dados = {}
+    chave_atual = None
+    with open(caminho_arquivo, 'r') as arquivo:
+        for linha in arquivo:
+            linha = linha.strip()  # Remove espaços em branco e quebras de linha
+            if linha.startswith('[') and linha.endswith(']'):
+                chave_atual = linha[1:-1]  # Remove os colchetes para usar como chave
+                dados[chave_atual] = []  # Inicia uma nova lista para essa chave
+            elif chave_atual:
+                dados[chave_atual].append(linha)  # Adiciona a linha à lista da chave atual
+    return dados
 
-    documents, videos_total, palavras_total, total_bytes = processa_videos(???)
+
+async def processa_dados_youtube():
+    caminho_arquivo = "info_youtube.txt"
+    dados = carregar_arquivo_para_dicionario(caminho_arquivo)
+
+    documents, videos_total, palavras_total, total_bytes = processa_videos(dados)
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=arquivo.base_conhecimento.chunk_size, 
                                                 chunk_overlap=arquivo.base_conhecimento.chunk_overlap,
