@@ -69,7 +69,9 @@ RUN pip install --no-cache-dir -v \
     requests==2.31.0 \
     PyPDF2==3.0.1 \
     chainlit==1.0.301 \ 
-    aioconsole==0.7.0
+    aioconsole==0.7.0 \
+    youtube-transcript-api==0.6.1 \
+    google-api-python-client==2.109.0
 
 WORKDIR /app
 COPY . /app
