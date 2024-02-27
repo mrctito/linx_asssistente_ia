@@ -2,6 +2,7 @@ import os
 import json
 from pydantic import BaseModel
 from typing import Tuple, List
+from operator import itemgetter
 from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain, ConversationalRetrievalChain
@@ -22,7 +23,10 @@ from langchain.schema import StrOutputParser
 from langchain.schema.runnable import Runnable
 from langchain.schema.runnable.config import RunnableConfig
 from langchain.schema.runnable import RunnablePassthrough, RunnableParallel
-
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+from langchain_core.messages import AIMessage, HumanMessage, get_buffer_string
+from langchain_core.prompts import format_document
+from langchain_core.runnables import RunnableParallel
 
 condense_template='''
 """Given the following chat history and a follow up question, rephrase the follow up input question 
@@ -213,25 +217,69 @@ async def GetConversationChain() -> ConversationalRetrievalChain:
 
 async def GetConversationChainRunnable():
 
-    # Prompt template
-    template = """Answer the question based only on the following context, 
-    which can include text and tables::
+    _template = """Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
+
+    Chat History:
+    {chat_history}
+    Follow Up Input: {question}
+    Standalone question:"""
+    CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(_template)
+
+    template = """Answer the question based only on the following context:
     {context}
+
     Question: {question}
     """
-    prompt = ChatPromptTemplate.from_template(template)
+    ANSWER_PROMPT = ChatPromptTemplate.from_template(template)
 
-    model = await GetChatModel(True)
+    DEFAULT_DOCUMENT_PROMPT = PromptTemplate.from_template(template="{page_content}")
+
+    def _combine_documents(
+        docs, document_prompt=DEFAULT_DOCUMENT_PROMPT, document_separator="\n\n"
+    ):
+        doc_strings = [format_document(doc, document_prompt) for doc in docs]
+        return document_separator.join(doc_strings)
+
+    chat_prompt, condense_prompt = await GetPrompts()    
+    model1 = await GetChatModel()
+    model2 = await GetChatModel()
     retriever = await GetRetriever()
 
-    chain = (
-        {"context": retriever, "question": RunnablePassthrough()}
-        | prompt
-        | model
-        | StrOutputParser()
+
+    memory = ConversationBufferMemory(
+        return_messages=True, output_key="answer", input_key="question"
     )
 
-    return chain
+    loaded_memory = RunnablePassthrough.assign(
+        chat_history=RunnableLambda(memory.load_memory_variables) | itemgetter("history"),
+    )
+
+    standalone_question = {
+        "standalone_question": {
+            "question": lambda x: x["question"],
+            "chat_history": lambda x: get_buffer_string(x["chat_history"]),
+        }
+        | CONDENSE_QUESTION_PROMPT | model1 | StrOutputParser(),
+    }
+            
+    retrieved_documents = {
+        "docs": itemgetter("standalone_question") | retriever,
+        "question": lambda x: x["standalone_question"],
+    }
+
+    final_inputs = {
+        "context": lambda x: _combine_documents(x["docs"]),
+        "question": itemgetter("question"),
+    }
+    
+    answer = {
+        "answer": final_inputs | ANSWER_PROMPT | model2,
+        "docs": itemgetter("docs"),
+    }
+
+    final_chain = loaded_memory | standalone_question | retrieved_documents | answer
+
+    return final_chain
 
 
 def concatena_sources(documents: List[Document]) -> str:
