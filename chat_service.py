@@ -273,7 +273,7 @@ async def GetConversationChainRunnable():
     }
     
     answer = {
-        "answer": final_inputs | ANSWER_PROMPT | model2,
+        "answer": final_inputs | ANSWER_PROMPT | model2 | StrOutputParser(),
         "docs": itemgetter("docs"),
     }
 

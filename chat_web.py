@@ -37,8 +37,11 @@ async def on_message(message: cl.Message):
     runnable = cl.user_session.get("runnable")  # type: Runnable
 
     inputs = {"question": message.content}
-    result = runnable.invoke(inputs)
+    result = await runnable.ainvoke(inputs)
+    msg = cl.Message(content=result["answer"], disable_feedback=True)
+    await msg.send()
 
+    return 
     msg = cl.Message(content="")
     async for chunk in runnable.astream(
         {"question": message.content},
