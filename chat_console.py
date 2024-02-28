@@ -29,7 +29,6 @@ async def main():
   print("Linx Assistente de IA")
   print("1-Chat")
   print("2-Criar base vetorial")
-  print("Escolha a opção:")
   opcao = input("Escolha a opção:")
 
   if opcao == "1":
