@@ -217,7 +217,8 @@ async def GetConversationChain() -> ConversationalRetrievalChain:
 
 async def GetConversationChainRunnable():
 
-    _template = """Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
+    _template = get_base_prompt_template()+"""\n\n
+    Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
 
     Chat History:
     {chat_history}
@@ -225,7 +226,8 @@ async def GetConversationChainRunnable():
     Standalone question:"""
     CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(_template)
 
-    template = """Answer the question based only on the following context:
+    template = get_base_prompt_template()+"""\n\n
+    Answer the question based only on the following context:
     {context}
 
     Question: {question}
@@ -234,16 +236,13 @@ async def GetConversationChainRunnable():
 
     DEFAULT_DOCUMENT_PROMPT = PromptTemplate.from_template(template="{page_content}")
 
+    #answer_prompt, condense_prompt = await GetPrompts()
+
     def _combine_documents(
         docs, document_prompt=DEFAULT_DOCUMENT_PROMPT, document_separator="\n\n"
     ):
         doc_strings = [format_document(doc, document_prompt) for doc in docs]
         return document_separator.join(doc_strings)
-
-    answer_prompt, condense_prompt = await GetPrompts()
-
-    ANSWER_PROMPT = answer_prompt
-    CONDENSE_QUESTION_PROMPT = condense_prompt
 
     model1 = await GetChatModel(True)
     model2 = await GetChatModel(True)
