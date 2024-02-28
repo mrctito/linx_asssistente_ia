@@ -38,8 +38,8 @@ async def on_message(message: cl.Message):
 
     inputs = {"question": message.content}
     result = await runnable.ainvoke(inputs)
-    res = result["answer"]
-    reposta = monta_resposta_chat(res)
+    answer = result["answer"]
+    reposta = monta_resposta_chat(result)
     msg = cl.Message(content=reposta, disable_feedback=True)
     await msg.send()
 
