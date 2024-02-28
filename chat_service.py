@@ -289,7 +289,7 @@ async def GetConversationChainRunnable():
 
 def concatena_sources(documents: List[Document]) -> str:
     # Usa compreensão de lista para extrair o 'source' de cada document.metadata
-    sources = [doc.metadata['source'] for doc in documents if 'source' in doc.metadata]
+    sources = {doc.metadata['source'] for doc in documents if 'source' in doc.metadata}
     # Concatena todos os sources com '\n' como separador
     return "\n".join(sources)
 
