@@ -140,15 +140,15 @@ async def cria_banco_vetorial():
     chunks_array = []
     total_chunks = None
 
-    chunks = await processa_dados_confluence()
-    for chunk in chunks:
+    chunks = await processa_dados_youtube()
+    for chunk in chunks_array:
         if total_chunks is None:
             total_chunks = chunk
         else:
             total_chunks += chunk
 
-    chunks = await processa_dados_youtube()
-    for chunk in chunks_array:
+    chunks = await processa_dados_confluence()
+    for chunk in chunks:
         if total_chunks is None:
             total_chunks = chunk
         else:
