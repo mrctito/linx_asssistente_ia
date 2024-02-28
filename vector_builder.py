@@ -137,22 +137,15 @@ async def save_vectorstore_qdrant(chunks: list):
 
 
 async def cria_banco_vetorial():
-    chunks_array = []
-    total_chunks = None
+    total_chunks = []
 
     chunks = await processa_dados_youtube()
     for chunk in chunks:
-        if total_chunks is None:
-            total_chunks = chunk
-        else:
-            total_chunks += chunk
+        total_chunks.append(chunk)
 
     chunks = await processa_dados_confluence()
     for chunk in chunks:
-        if total_chunks is None:
-            total_chunks = chunk
-        else:
-            total_chunks += chunk
+        total_chunks.append(chunk)
 
     await save_vectorstore_qdrant(total_chunks)
     # teste:
