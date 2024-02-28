@@ -71,7 +71,8 @@ RUN pip install --no-cache-dir -v \
     chainlit==1.0.301 \ 
     aioconsole==0.7.0 \
     youtube-transcript-api==0.6.1 \
-    google-api-python-client==2.109.0
+    google-api-python-client==2.109.0 \
+    python-dotenv==1.0.1
 
 WORKDIR /app
 COPY . /app

@@ -2,6 +2,7 @@ import os
 import json
 import asyncio
 import aioconsole
+from dotenv import load_dotenv
 from pydantic import BaseModel
 from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
@@ -26,6 +27,7 @@ async def test():
 
 
 async def main():
+  load_dotenv()
   criacao_base_vetorial_permitido = os.getenv("CRIACAO_BASE_VETORIAL_PERMITIDA", "N")
 
   print("Linx Assistente de IA")
