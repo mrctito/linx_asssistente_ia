@@ -45,11 +45,12 @@ prompt_template_restrito_ao_contexto = """
 \nPRESTE MUITA ATENÇÃO E SIGA TODAS ESSAS INSTRUÇÕES CUIDADOSAMENTE:
 1- Baseie suas respostas exclusivamente no conteúdo fornecido no CONTEXTO apresentado.
 2- Forneça respostas completas e com todos os detalhes e informações complementares que estiverem disponíveis no contexto.
-3- Não procure ou inclua informações além das fornecidas no contexto.
-4- Evite especulações; forneça respostas fundamentadas somente nas informações disponíveis.
-5- Nunca apresente informações inventadas ou fictícias.
-6- Responda sempre no idioma em que a pergunta foi feita. Caso o contexto esteja em um idioma diferente, busque esclarecer o significado mantendo a integridade da informação.
-7- Se não for possível fornecer uma resposta devido à falta de informações ou ambiguidade no contexto, responda com: "Desculpe, não tenho informações suficientes para responder a essa pergunta com precisão."
+3- Quando na resposta houver instruções, responda em forma de tópicos.
+4- Não procure, não invente, e não inclua informações além das fornecidas no contexto.
+5- Evite especulações; forneça respostas fundamentadas somente nas informações disponíveis.
+6- Nunca apresente informações inventadas ou fictícias.
+7- Responda sempre no idioma em que a pergunta foi feita. Caso o contexto esteja em um idioma diferente, busque esclarecer o significado mantendo a integridade da informação.
+8- Se não for possível fornecer uma resposta devido à falta de informações ou ambiguidade no contexto, responda com: "Desculpe, não tenho informações suficientes para responder a essa pergunta com precisão."
 
 Lembre-se de que em situações onde o contexto possa ser interpretado de várias maneiras, considere mencionar essa ambiguidade em sua resposta para manter a transparência.
 """
@@ -59,10 +60,11 @@ prompt_template_nao_restrito_ao_contexto = """
 1- Baseie suas respostas no CONTEXTO fornecido, complementando com seu conhecimento quando apropriado.
 2- Use informações adicionais do seu conhecimento apenas quando estas enriquecerem a resposta e estiverem em harmonia com o contexto apresentado.
 3- Forneça respostas completas e com todos os detalhes e informações complementares que estiverem disponíveis.
-4- Seja claro sobre qual parte da resposta vem do contexto e qual parte é baseada em conhecimento externo.
-5- Evite especulações e não apresente informações fictícias.
-6- Responda no idioma em que a pergunta foi feita. Caso o contexto esteja em um idioma diferente, faça a tradução necessária mantendo a precisão da informação.
-7- Se, mesmo com a inclusão de seu conhecimento, a informação necessária não estiver disponível ou o contexto for ambíguo, responda com: "Desculpe, não tenho informações suficientes para responder a essa pergunta com total precisão."
+4- Quando a resposta tiver instruções, responda em forma de tópicos.
+5- Seja claro sobre qual parte da resposta vem do contexto e qual parte é baseada em conhecimento externo.
+6- Evite especulações e não apresente informações fictícias.
+7- Responda no idioma em que a pergunta foi feita. Caso o contexto esteja em um idioma diferente, faça a tradução necessária mantendo a precisão da informação.
+8- Se, mesmo com a inclusão de seu conhecimento, a informação necessária não estiver disponível ou o contexto for ambíguo, responda com: "Desculpe, não tenho informações suficientes para responder a essa pergunta com total precisão."
 
 Lembre-se de utilizar seu conhecimento de forma responsável e apenas quando isso contribuir para a precisão e relevância da resposta. Sua transparência é essencial para manter a confiança na qualidade das informações fornecidas.
 """
@@ -266,18 +268,18 @@ async def GetConversationChainRunnable():
     }
             
     retrieved_documents = {
-        "docs": itemgetter("standalone_question") | retriever,
+        "source_documents": itemgetter("standalone_question") | retriever,
         "question": lambda x: x["standalone_question"],
     }
 
     final_inputs = {
-        "context": lambda x: _combine_documents(x["docs"]),
+        "context": lambda x: _combine_documents(x["source_documents"]),
         "question": itemgetter("question"),
     }
     
     answer = {
         "answer": final_inputs | ANSWER_PROMPT | model2 | StrOutputParser(),
-        "docs": itemgetter("docs"),
+        "source_documents": itemgetter("source_documents"),
     }
 
     final_chain = loaded_memory | standalone_question | retrieved_documents | answer
