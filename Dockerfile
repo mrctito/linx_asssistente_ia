@@ -87,4 +87,4 @@ RUN chmod +x /app/main.py
 #CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8109"]
 #CMD ["python3", "/app/main.py"]
 
-ENTRYPOINT ["chainlit", "run", "/app/chat_web.py", "--server.port=8109", "--server.address=0.0.0.0"]
+ENTRYPOINT ["chainlit", "run", "/app/chat_web.py", "--port=8109", "--host=0.0.0.0", "--headless"]
