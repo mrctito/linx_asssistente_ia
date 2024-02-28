@@ -26,20 +26,22 @@ async def test():
 
 
 async def main():
+  criacao_base_vetorial_permitido = os.getenv("CRIACAO_BASE_VETORIAL_PERMITIDA", "N")
+
   print("Linx Assistente de IA")
   print("1-Chat")
-  print("2-Criar base vetorial")
+  if criacao_base_vetorial_permitido == "S":
+    print("2-Criar base vetorial")
   opcao = input("Escolha a opção:")
 
   if opcao == "1":
     print("Iniciando o serviço de chat via console.")
     await test()
   elif opcao == "2":
-    criacao_base_vetorial_permitido = os.getenv("CRIACAO_BASE_VETORIAL_PERMITIDA", "N")
     if criacao_base_vetorial_permitido != "S":
       print("Criação da base vetorial não permitida.")
       return
-    confirma = input("Confirma criação da base vetorial? (S/N): ")
+    confirma = input("Confirma criação da base vetorial? (SIM/N):")
     if confirma == "S":
       await cria_banco_vetorial()
     else:
