@@ -11,7 +11,6 @@ from chat_service import chat
 from llm import prepara_llm, prepara_llm_azure
 from prompt import prepara_prompt
 from vector_builder import cria_banco_vetorial
-from vector_builder_confluence import cria_banco_confluence
 from langchain.memory import ChatMessageHistory, ConversationBufferMemory
 
 
