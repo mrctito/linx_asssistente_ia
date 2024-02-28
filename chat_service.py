@@ -240,7 +240,11 @@ async def GetConversationChainRunnable():
         doc_strings = [format_document(doc, document_prompt) for doc in docs]
         return document_separator.join(doc_strings)
 
-    chat_prompt, condense_prompt = await GetPrompts()    
+    answer_prompt, condense_prompt = await GetPrompts()
+
+    ANSWER_PROMPT = answer_prompt
+    CONDENSE_QUESTION_PROMPT = condense_prompt
+
     model1 = await GetChatModel(True)
     model2 = await GetChatModel(True)
     retriever = await GetRetriever()
