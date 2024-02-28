@@ -51,7 +51,7 @@ RUN apt-get update && apt-get install -y \
     && pip3 install pyaudio
 
 RUN pip install --no-cache-dir -v \
-    langchain==0.1.8 \
+    langchain==0.1.9 \
     openai==1.12.0 \
     litellm==1.26.8 \
     langchain_openai==0.0.6 \
@@ -76,7 +76,7 @@ RUN pip install --no-cache-dir -v \
 
 WORKDIR /app
 COPY . /app
-EXPOSE 8108
+EXPOSE 8109
 
 RUN pwd
 RUN which python3
@@ -84,5 +84,7 @@ RUN python3 --version
 RUN ls -la /app
 RUN chmod +x /app/main.py
 
-#CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5555"]
-CMD ["python3", "/app/main.py"]
+#CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8109"]
+#CMD ["python3", "/app/main.py"]
+
+ENTRYPOINT ["chainlit", "run", "/app/chat_web.py", "--server.port=8109", "--server.address=0.0.0.0"]
