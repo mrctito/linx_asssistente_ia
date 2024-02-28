@@ -3,6 +3,7 @@ from typing import List, Tuple
 import PyPDF2
 from io import BytesIO
 import json
+from urllib.parse import urljoin, urlencode, urlparse, parse_qsl
 from langchain.agents import AgentType
 from langchain_community.llms import OpenAI
 from langchain.agents import initialize_agent

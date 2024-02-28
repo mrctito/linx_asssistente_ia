@@ -141,7 +141,7 @@ async def cria_banco_vetorial():
     total_chunks = None
 
     chunks = await processa_dados_youtube()
-    for chunk in chunks_array:
+    for chunk in chunks:
         if total_chunks is None:
             total_chunks = chunk
         else:
