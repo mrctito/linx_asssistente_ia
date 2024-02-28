@@ -113,6 +113,7 @@ async def save_vectorstore_qdrant(chunks: list):
                 try:
                     qdrant_doc_store.add_documents(chunks_pack)
                     ultimo_chunk += len(chunks_pack)
+                    print("Gravando chunk: "+str(ultimo_chunk))
                     break
                 except Exception as e:
                     if retries == 0: 
