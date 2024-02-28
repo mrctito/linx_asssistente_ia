@@ -78,8 +78,10 @@ Resposta:
 
 
 def get_base_prompt_template() -> str:
-    base_prompt_template = """
-    Você é um assistente útil, atencioso e muito educado. Especialista no sistema Linx Seller Web. 
+    LINX_PRODUTO = os.getenv("LINX_PRODUTO", "LINX")
+
+    base_prompt_template = f"""
+    Você é um assistente útil, atencioso e muito educado. Especialista no sistema {LINX_PRODUTO}. 
     Sua missão é responder as perguntas dos clientes de forma didática, com informações precisas e relevantes.
     """
 
