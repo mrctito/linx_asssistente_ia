@@ -34,3 +34,8 @@ This example assumes your Chainlit server is running on http://localhost:8000
 
 https://cloud.getliteral.ai/projects/Linx%20Assistente%20IA-X1JYIHhvJDed/settings
 
+
+### ESte projeto utiliza o serviço langsmith para depuração de todo o processo que envolve o engine de IA
+
+https://smith.langchain.com/
+
