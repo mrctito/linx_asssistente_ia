@@ -43,3 +43,8 @@ ESte projeto utiliza o serviço langsmith para depuração de todo o processo qu
 
 https://smith.langchain.com/
 
+
+### Roadmap
+
+1- Indexar e exibir as imagens que estiverem em meio aos textos do LinxShare
+2- Permitir interações por voz
