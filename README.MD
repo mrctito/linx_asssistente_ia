@@ -48,3 +48,6 @@ https://smith.langchain.com/
 
 1- Indexar e exibir as imagens que estiverem em meio aos textos do LinxShare
 2- Permitir interações por voz
+3- Resolver bug que está impedindo o streaming das respostas
+
+
