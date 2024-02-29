@@ -39,7 +39,7 @@ https://cloud.getliteral.ai/projects/Linx%20Assistente%20IA-X1JYIHhvJDed/setting
 
 ### LangSmith
 
-ESte projeto utiliza o serviço langsmith para depuração de todo o processo que envolve o engine de IA, análise de custos (US$), erros, chamadas de API, performance, enfim dá pra ver tudo que está acontecendo.
+ESte projeto utiliza o serviço langsmith para depuração de todo o processo que envolve o engine de IA, análise de custos (US$), erros, chamadas de API, performance, enfim dá pra ver tudo que está acontecendo. O LangSmith é uma ferramenta do stack LangChain.
 
 https://smith.langchain.com/
 
