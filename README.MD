@@ -4,11 +4,13 @@ chat_console.py: Permite testar o chat via console e recriar a base de conhecime
 
 chat_web.py: executa a interface do chat ChainLit
 
+
 ### Base de Conhecimento
 
 A base de dados de postos já está carregada no bando vetorial do Tito. É preciso mais tarde mover para um outro banco de dados vetorial, de propriedade da Linx, provavelmente no Azure.
 
 Para carregar outras bases basta alterar os arquivos info_confluence.txt e info_youtube.txt e executar a carga da base de dados novamente, através da opção correspondente em chat_console.py
+
 
 ### Para instalar o chat dentro de uma janela (webchat)
 
