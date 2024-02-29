@@ -30,12 +30,16 @@ This example assumes your Chainlit server is running on http://localhost:8000
 </body>
 
 
-### Este projeto utiliza o serviço getliteral que armazena automaticamente todas as conversas que acontecerem neste chat para análise posterior.
+### GetLiteral
+
+Este projeto utiliza o serviço getliteral que armazena automaticamente todas as conversas que acontecerem neste chat para análise posterior.
 
 https://cloud.getliteral.ai/projects/Linx%20Assistente%20IA-X1JYIHhvJDed/settings
 
 
-### ESte projeto utiliza o serviço langsmith para depuração de todo o processo que envolve o engine de IA
+### LangSmith
+
+ESte projeto utiliza o serviço langsmith para depuração de todo o processo que envolve o engine de IA, análise de custos (US$), erros, chamadas de API, performance, enfim dá pra ver tudo que está acontecendo.
 
 https://smith.langchain.com/
 
