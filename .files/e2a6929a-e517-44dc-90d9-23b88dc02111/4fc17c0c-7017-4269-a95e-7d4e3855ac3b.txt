@@ -1,4 +1,0 @@
-produtos armazenados em almoxarifados do tipo “Área de venda”, poderão sofrer, também, operações de venda.
-Os produtos que estão com “Status” como “Inativo em operação”, serão alterados automaticamente para “Inativo fora de operação” quando o estoque desse produto zerar através de venda no PDV, movimentação de 
-estoque ou contagem de estoque.
-Um produto pode estar vinculado em mais de um almoxarifado, para isso, basta informar todos os almoxarifados desejados para o produto no cadastro de produtos.

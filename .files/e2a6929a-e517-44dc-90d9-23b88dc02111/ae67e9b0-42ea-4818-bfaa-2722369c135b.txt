@@ -1,5 +1,0 @@
-3. Funcionalidades
-3.1 Incluir Transportadora
-Para incluir uma transportadora, acesse o menu Cadastros > Estabelecimento > Transportadoras.
-Será apresentada a tela 'Pesquisar Transportadora, onde são apresentadas as transportadoras já cadastradas. Para cadastrar uma nova transportadora, clique no botão "Incluir". Informe o CNPJ da transportadora que será 
-cadastrada e clique em "Verifica". Caso a mesma já esteja cadastrada será possível alterar suas informações existentes, caso contrário serão habilitados os campos a serem preenchidos para realizar o cadastro. Após

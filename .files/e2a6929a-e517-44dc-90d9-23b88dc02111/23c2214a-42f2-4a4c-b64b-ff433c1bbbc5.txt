@@ -1,6 +1,0 @@
-Na aba "Contatos" deverão ser informados os dados de contato da transportadora, tais como: telefone, e-mail, etc. O preenchimento das informações desta guia é opcional.
-Com todos os dados obrigatórios preenchidos, clique no botão "Salvar" e se desejar abortar a operação, clique em "Cancelar".
-3.2 Alterar Transportadora
-Para alterar o cadastro de uma transportadora, acesse o menu Cadastros > Estabelecimento > Transportadoras.
-Será apresentada a tela " Pesquisar Transportadora", onde constam as transportadoras já existentes. Selecione aquela que será alterada e clique no botão "Alterar". Você poderá utilizar os dados disponíveis na tela de 
-pesquisa ou utilizar os filtros para refinar a pesquisa que será realizada.

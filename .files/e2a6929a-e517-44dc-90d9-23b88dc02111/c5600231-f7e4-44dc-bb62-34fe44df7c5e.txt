@@ -1,6 +1,0 @@
-pesquisa ou utilizar os filtros para refinar a pesquisa que será realizada.
-Realize as alterações necessárias no cadastro da  transportadora  e clique em " Salvar" para efetivar as alterações ou em " Cancelar"  para abortar a operação.
-3.3 Excluir Transportadora
-Para excluir uma transportadora, você deverá acessar o menu Cadastros > Estabelecimento > Transportadoras.
-Será apresentada a tela  Pesquisar Transportadora , onde constam as transportadoras já existentes. Você poderá utilizar os dados disponíveis na tela ou utilizar os filtros para refinar a pesquisa que será realizada. Selecione
-aquela que deseja excluir.
