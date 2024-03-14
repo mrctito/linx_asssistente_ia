@@ -2,6 +2,8 @@
 
 *.log
 **.env
+*.db
+**.db
 .DS_Store
 **__pycache__
 /scratch
