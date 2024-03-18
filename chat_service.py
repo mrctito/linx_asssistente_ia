@@ -2,6 +2,7 @@ import os
 import json
 from pydantic import BaseModel
 from typing import Tuple, List
+from typing import Any, Dict, List, Optional
 from operator import itemgetter
 from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
@@ -27,6 +28,11 @@ from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain_core.messages import AIMessage, HumanMessage, get_buffer_string
 from langchain_core.prompts import format_document
 from langchain_core.runnables import RunnableParallel
+from langchain.callbacks.streaming_stdout_final_only import FinalStreamingStdOutCallbackHandler
+from langchain.callbacks.base import AsyncCallbackHandler
+from langchain.schema import Document, LLMResult, BaseRetriever
+
+
 
 condense_template='''
 """Given the following chat history and a follow up question, rephrase the follow up input question 
@@ -114,13 +120,40 @@ async def GetPrompts() -> Tuple[ChatPromptTemplate, PromptTemplate]:
         raise Exception("Erro ao criar prompts: "+str(e))
 
 
-async def GetChatModel(streaming: bool=False) -> ChatOpenAI:
-    llm = ChatOpenAI(temperature=0, 
-                    model=os.getenv("MODEL_NAME"),
-                    openai_api_key=os.getenv("OPENAI_API_KEY"),
-                    streaming=streaming,
-                    verbose=(os.getenv("VERBOSE", "S") == "S")
-                    )
+class StreamCallbackHandler(AsyncCallbackHandler):
+    def __init__(self, cl):
+        self.cl = cl
+        self.msg = None
+
+    async def on_llm_start(self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any) -> None:
+        msg = self.cl.Message(content="")
+        await msg.send()
+        self.msg = msg
+
+    async def on_llm_new_token(self, token: str, **kwargs) -> None:
+        await self.msg.stream_token(token)
+
+    async def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
+        await self.msg.send()
+
+
+async def GetChatModel(streaming: bool=False, cl=None) -> ChatOpenAI:
+    if streaming:
+        llm = ChatOpenAI(temperature=0, 
+                        model=os.getenv("MODEL_NAME"),
+                        openai_api_key=os.getenv("OPENAI_API_KEY"),
+                        streaming=streaming,
+                        verbose=(os.getenv("VERBOSE", "S") == "S"),
+                        callbacks=[StreamCallbackHandler(cl)]
+                        )
+    else:
+        llm = ChatOpenAI(temperature=0, 
+                        model=os.getenv("MODEL_NAME"),
+                        openai_api_key=os.getenv("OPENAI_API_KEY"),
+                        streaming=streaming,
+                        verbose=(os.getenv("VERBOSE", "S") == "S"),
+                        )
+
     return llm
 
 
@@ -160,7 +193,7 @@ async def GetRetriever() -> VectorStoreRetriever:
 
 
 async def GetMemory() -> BaseChatMessageHistory:
-    llm = await GetChatModel()
+    llm = await GetChatModel(False)
 
     connection = os.getenv("DB_CACHE_URL")
     table_name = "linx_seller_chat_history"
@@ -188,18 +221,18 @@ async def GetMemory() -> BaseChatMessageHistory:
     return memory_conversation
 
 
-async def GetConversationChain() -> ConversationalRetrievalChain:
+async def GetConversationChain(streaming: bool = False, cl = None) -> ConversationalRetrievalChain:
     memory = await GetMemory()
     retriever = await GetRetriever()
     chat_prompt, condense_prompt = await GetPrompts()
 
-    llm_question_generator = await GetChatModel()     
+    llm_question_generator = await GetChatModel(False)
     question_generator_chain = LLMChain(llm=llm_question_generator,
                                         prompt=condense_prompt,
                                         verbose=(os.getenv("VERBOSE", "S") == "S")
                                         )
 
-    llm = await GetChatModel()
+    llm = await GetChatModel(streaming, cl)
     combine_docs_chain = load_qa_chain(llm=llm,
                                      chain_type="stuff",
                                      prompt=chat_prompt,
@@ -213,7 +246,7 @@ async def GetConversationChain() -> ConversationalRetrievalChain:
                                         return_source_documents=True,
                                         combine_docs_chain=combine_docs_chain,
                                         question_generator=question_generator_chain,
-                                        verbose=(os.getenv("VERBOSE", "S") == "S")
+                                        verbose=(os.getenv("VERBOSE", "S") == "S"),
                                         )
     
     return chain
