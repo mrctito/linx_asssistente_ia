@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 from typing import List, Any, Dict
 from langchain_core.documents import Document
 from langchain.chains import LLMChain, ConversationalRetrievalChain
@@ -9,6 +10,7 @@ from chat_service import GetConversationChain, GetConversationChainRunnable, mon
 from langchain.callbacks.base import BaseCallbackHandler
 
 ###chainlit run chat_interface.py
+load_dotenv()
 
 
 @cl.on_chat_start
