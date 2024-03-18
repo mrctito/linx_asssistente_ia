@@ -211,13 +211,6 @@ async def GetMemory() -> BaseChatMessageHistory:
                                             chat_memory=chat_history,
                                             return_messages=True
                                             )
-    """
-        memory_key="chat_history",
-        output_key="answer",
-        chat_memory=message_history,
-        return_messages=True,
-    """
-
     return memory_conversation
 
 
