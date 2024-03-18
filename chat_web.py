@@ -10,13 +10,6 @@ from langchain.callbacks.base import BaseCallbackHandler
 
 ###chainlit run chat_interface.py
 
-class MyCustomCallbackHandler(BaseCallbackHandler):
-    def on_text(self, text: str, color: str | None = None, end: str = "", **kwargs: Any) -> None:
-        print(text) 
-    
-    def on_chain_end(self, outputs: Dict[str, Any], **kwargs: Any) -> None:
-        print("end")
-
 
 @cl.on_chat_start
 async def on_chat_start():
