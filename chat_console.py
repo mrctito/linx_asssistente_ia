@@ -1,16 +1,18 @@
-import os
-import json
 import asyncio
+import json
+import os
+
 import aioconsole
-from dotenv import load_dotenv
-from pydantic import BaseModel
-from langchain_openai import ChatOpenAI
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain, ConversationalRetrievalChain
 import uvicorn
+from dotenv import load_dotenv
+from langchain.chains import ConversationalRetrievalChain, LLMChain
+from langchain.memory import ChatMessageHistory, ConversationBufferMemory
+from langchain.prompts import PromptTemplate
+from langchain_openai import ChatOpenAI
+from pydantic import BaseModel
+
 from chat_service import chat
 from vector_builder import cria_banco_vetorial
-from langchain.memory import ChatMessageHistory, ConversationBufferMemory
 
 
 # rotina para testar o serviço
@@ -43,7 +45,9 @@ async def main():
       return
     confirma = input("Confirma criação da base vetorial? (SIM/N):")
     if confirma == "S":
+      #########################################
       await cria_banco_vetorial()
+      ########################################
     else:
       print("Criação da Base vetorial foi cancelada.")
 

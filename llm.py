@@ -1,8 +1,9 @@
-import os
 import json
-from langchain_openai import AzureChatOpenAI, ChatOpenAI
-from langchain.prompts import PromptTemplate, BasePromptTemplate
+import os
+
 from langchain.chains import LLMChain
+from langchain.prompts import BasePromptTemplate, PromptTemplate
+from langchain_openai import AzureChatOpenAI, ChatOpenAI
 
 
 def cria_llm_openai(verbose: bool = False):
@@ -22,7 +23,6 @@ def cria_llm_azure(verbose: bool = False):
         openai_api_version=AZURE_OPENAI_API_VERSION,
         openai_api_base=AZURE_OPENAI_API_BASE,
         openai_api_key=AZURE_OPENAI_API_KEY,
-        openai_api_type=AZURE_OPENAI_API_TYPE,
         temperature=0,
         verbose=verbose
     ) 

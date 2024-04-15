@@ -1,38 +1,35 @@
-import os
 import json
-from pydantic import BaseModel
-from typing import Tuple, List
-from typing import Any, Dict, List, Optional
+import os
 from operator import itemgetter
-from langchain_openai import ChatOpenAI
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain, ConversationalRetrievalChain
-from langchain.memory import ChatMessageHistory, ConversationBufferMemory
-from qdrant_client import QdrantClient, models
-from langchain_community.vectorstores.qdrant import Qdrant
-from langchain.vectorstores.base import VectorStoreRetriever
-from langchain_openai import OpenAIEmbeddings
-from openai import Embedding
-from langchain.chains.question_answering import load_qa_chain
-from langchain.memory import (ConversationBufferWindowMemory, SQLChatMessageHistory)
-from langchain.schema.chat_history import BaseChatMessageHistory
-from langchain_core.messages import HumanMessage, AIMessage
-from langchain_core.prompts import PromptTemplate
-from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
-from langchain_core.documents import Document
-from langchain.schema import StrOutputParser
-from langchain.schema.runnable import Runnable
-from langchain.schema.runnable.config import RunnableConfig
-from langchain.schema.runnable import RunnablePassthrough, RunnableParallel
-from langchain_core.runnables import RunnableLambda, RunnablePassthrough
-from langchain_core.messages import AIMessage, HumanMessage, get_buffer_string
-from langchain_core.prompts import format_document
-from langchain_core.runnables import RunnableParallel
-from langchain.callbacks.streaming_stdout_final_only import FinalStreamingStdOutCallbackHandler
+from typing import Any, Dict, List, Optional, Tuple
+
 from langchain.callbacks.base import AsyncCallbackHandler
-from langchain.schema import Document, LLMResult, BaseRetriever
-
-
+from langchain.callbacks.streaming_stdout_final_only import \
+    FinalStreamingStdOutCallbackHandler
+from langchain.chains import ConversationalRetrievalChain, LLMChain
+from langchain.chains.question_answering import load_qa_chain
+from langchain.memory import (ChatMessageHistory, ConversationBufferMemory,
+                              ConversationBufferWindowMemory,
+                              SQLChatMessageHistory)
+from langchain.prompts import (ChatPromptTemplate, HumanMessagePromptTemplate,
+                               PromptTemplate, SystemMessagePromptTemplate)
+from langchain.schema import (BaseRetriever, Document, LLMResult,
+                              StrOutputParser)
+from langchain.schema.chat_history import BaseChatMessageHistory
+from langchain.schema.runnable import (Runnable, RunnableParallel,
+                                       RunnablePassthrough)
+from langchain.schema.runnable.config import RunnableConfig
+from langchain.vectorstores.base import VectorStoreRetriever
+from langchain_community.vectorstores.qdrant import Qdrant
+from langchain_core.documents import Document
+from langchain_core.messages import AIMessage, HumanMessage, get_buffer_string
+from langchain_core.prompts import PromptTemplate, format_document
+from langchain_core.runnables import (RunnableLambda, RunnableParallel,
+                                      RunnablePassthrough)
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from openai import Embedding
+from pydantic import BaseModel
+from qdrant_client import QdrantClient, models
 
 condense_template='''
 """Given the following chat history and a follow up question, rephrase the follow up input question 
@@ -138,6 +135,11 @@ class StreamCallbackHandler(AsyncCallbackHandler):
 
 
 async def GetChatModel(streaming: bool=False, cl=None) -> ChatOpenAI:
+
+
+    #lembrete usar cria_llm e não ChatOpenAI direto.
+    #cria_llm
+
     if streaming:
         llm = ChatOpenAI(temperature=0, 
                         model=os.getenv("MODEL_NAME"),
