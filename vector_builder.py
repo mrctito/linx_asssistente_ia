@@ -1,31 +1,30 @@
-import os
-from typing import List, Tuple
-import PyPDF2
-from io import BytesIO
 import json
-from langchain.agents import AgentType
-from langchain_community.llms import OpenAI
-from langchain.agents import initialize_agent
+import os
+from io import BytesIO
+from typing import List, Tuple
+
+import PyPDF2
+from atlassian import Confluence
+from langchain.agents import AgentType, initialize_agent
 from langchain.agents.agent_toolkits.jira.toolkit import JiraToolkit
+from langchain.document_loaders.sitemap import SitemapLoader
+from langchain.document_loaders.unstructured import UnstructuredFileLoader
+from langchain.document_transformers.openai_functions import \
+    create_metadata_tagger
+from langchain.indexes import SQLRecordManager, index
 from langchain.schema import Document
 from langchain.text_splitter import (CharacterTextSplitter,
-                                    RecursiveCharacterTextSplitter)
-from atlassian import Confluence
-from langchain_openai import OpenAIEmbeddings
-from langchain.schema import Document
-from langchain.document_transformers.openai_functions import create_metadata_tagger
+                                     RecursiveCharacterTextSplitter)
+from langchain_community.document_loaders import (JSONLoader,
+                                                  UnstructuredPDFLoader,
+                                                  WebBaseLoader)
+from langchain_community.llms import OpenAI
 from langchain_community.vectorstores.qdrant import Qdrant
-from langchain_community.document_loaders import WebBaseLoader
-from langchain_community.document_loaders import JSONLoader
-from langchain_community.document_loaders import UnstructuredPDFLoader
-from langchain.document_loaders.unstructured import UnstructuredFileLoader
-from langchain.document_loaders.sitemap import SitemapLoader
+from langchain_openai import OpenAIEmbeddings
 from qdrant_client import QdrantClient, models
-from langchain.indexes import SQLRecordManager, index
 
 from vector_builder_confluence import processa_dados_confluence
 from vector_builder_youtube import processa_dados_youtube
-
 
 """
 client = QdrantClient(os.getenv('QDRANT_URL'), api_key=os.getenv('QDRANT_API'))
@@ -137,17 +136,4 @@ async def save_vectorstore_qdrant(chunks: list):
         print(f"ERRO ao salvar base de conhecimento no banco vetorial:\n"+str(e)+"\n")    
 
 
-async def cria_banco_vetorial():
-    total_chunks = []
 
-    chunks = await processa_dados_youtube()
-    for chunk in chunks:
-        total_chunks.append(chunk)
-
-    chunks = await processa_dados_confluence()
-    for chunk in chunks:
-        total_chunks.append(chunk)
-
-    await save_vectorstore_qdrant(total_chunks)
-    # teste:
-    await save_vectorstore_qdrant_incremental(total_chunks)
